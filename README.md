@@ -37,8 +37,6 @@ Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/bui
 
 
 
-rm pnpm-lock.yaml
-pnpm install
 git add .
-git commit -m "fix: move pnpm config to .npmrc for pnpm v10 compatibility"
+git commit -m "fix: make isFree and thumbnailUrl optional in Template type"
 git push

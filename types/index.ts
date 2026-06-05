@@ -12,9 +12,9 @@ export interface Template {
   features: string[]
   priceUsd: number
   priceKes: number
-  isFree: boolean
+  isFree?: boolean
   livePreviewUrl: string
-  thumbnailUrl: string
+  thumbnailUrl?: string | null
   screenshots: string[]
   isPublished: boolean
   downloadCount: number
