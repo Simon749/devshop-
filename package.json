@@ -54,11 +54,5 @@
   },
   "optionalDependencies": {
     "@esbuild/win32-x64": "^0.28.0"
-  },
-  "pnpm": {
-    "neverBuiltDependencies": [
-      "@esbuild-kit/core-utils",
-      "@esbuild-kit/esm-loader"
-    ]
   }
 }
