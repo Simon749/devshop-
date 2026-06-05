@@ -6,15 +6,15 @@ export interface Template {
   id: string
   title: string
   slug: string
-  description: string
+  description: string | null
   category: Exclude<Category, "all">
   techStack: string[]
   features: string[]
   priceUsd: number
   priceKes: number
-  isFree?: boolean
-  livePreviewUrl: string
-  thumbnailUrl?: string | null
+  isFree: boolean
+  livePreviewUrl: string | null
+  thumbnailUrl: string | null
   screenshots: string[]
   isPublished: boolean
   downloadCount: number

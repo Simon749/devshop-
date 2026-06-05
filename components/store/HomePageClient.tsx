@@ -6,7 +6,7 @@ import { HeroSection } from "./HeroSection"
 import { FilterHeader } from "./FilterHeader"
 import { ProductGrid } from "./ProductGrid"
 import { Template, Category, PriceFilter } from "@/types"
-import { Code2, Globe, Shield, Zap } from "lucide-react"
+import { Code2, Globe, Shield, ArrowRight } from "lucide-react"
 
 interface HomePageClientProps {
   templates: Template[]
@@ -30,6 +30,7 @@ export function HomePageClient({ templates, isKenyan }: HomePageClientProps) {
 
   return (
     <div className="min-h-screen bg-devcraft-bg">
+
       {/* Hero */}
       <HeroSection />
 
@@ -38,10 +39,10 @@ export function HomePageClient({ templates, isKenyan }: HomePageClientProps) {
         <div className="max-w-7xl mx-auto px-6 py-8">
           <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
             {[
-              { icon: Code2, label: "Templates", value: "6+" },
-              { icon: Globe, label: "Countries", value: "50+" },
-              { icon: Shield, label: "Secure Payments", value: "M-Pesa + Card" },
-              { icon: Zap, label: "Downloads", value: "12,900+" },
+              { icon: Code2,  label: "Templates",       value: "6+" },
+              { icon: Globe,  label: "Countries",        value: "50+" },
+              { icon: Shield, label: "Secure Payments",  value: "M-Pesa + Card" },
+              { icon: ArrowRight, label: "Downloads",    value: "12,900+" },
             ].map((stat, i) => (
               <motion.div
                 key={stat.label}
@@ -51,12 +52,16 @@ export function HomePageClient({ templates, isKenyan }: HomePageClientProps) {
                 transition={{ delay: i * 0.1 }}
                 className="flex items-center gap-3"
               >
-                <div className="w-10 h-10 rounded-lg bg-devcraft-violet/10 border border-devcraft-violet/20 flex items-center justify-center shrink-0">
+                <div className="w-10 h-10 rounded-[4px] bg-devcraft-violet/10 border border-devcraft-violet/20 flex items-center justify-center shrink-0">
                   <stat.icon className="w-4 h-4 text-devcraft-violet" />
                 </div>
                 <div>
-                  <div className="text-white font-bold text-lg">{stat.value}</div>
-                  <div className="text-slate-500 text-xs">{stat.label}</div>
+                  <div className="font-mono text-[15px] font-medium text-white tracking-tight">
+                    {stat.value}
+                  </div>
+                  <div className="font-mono text-[9px] uppercase tracking-[0.1em] text-devcraft-slate">
+                    {stat.label}
+                  </div>
                 </div>
               </motion.div>
             ))}
@@ -66,25 +71,29 @@ export function HomePageClient({ templates, isKenyan }: HomePageClientProps) {
 
       {/* Templates Section */}
       <section className="max-w-7xl mx-auto px-6 py-16 md:py-24" id="templates">
-        {/* Section Header */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
           className="mb-12"
         >
-          <h2 className="text-3xl md:text-4xl font-bold text-white mb-3">
-            Browse Templates
+          <div className="flex items-center gap-3 mb-4">
+            <span className="block w-5 h-px bg-devcraft-slate" />
+            <span className="font-mono text-[10px] uppercase tracking-[0.14em] text-devcraft-slate">
+              Browse Templates
+            </span>
+          </div>
+          <h2 className="font-display text-3xl md:text-4xl text-white font-normal tracking-tight mb-3">
+            Hand-crafted codebases
           </h2>
-          <p className="text-slate-400 max-w-xl">
-            Hand-crafted, production-grade templates with clean architecture, modern UI, and dual-market payment support.
+          <p className="font-mono text-[11px] leading-[1.9] text-devcraft-slate-light max-w-xl font-light">
+            Production-grade templates with clean architecture, modern UI, and dual-market payment support.
             {isKenyan && (
               <span className="text-devcraft-emerald ml-2">🇰🇪 Prices shown in KES</span>
             )}
           </p>
         </motion.div>
 
-        {/* Filters */}
         <div className="mb-10">
           <FilterHeader
             activeCategory={activeCategory}
@@ -95,52 +104,92 @@ export function HomePageClient({ templates, isKenyan }: HomePageClientProps) {
           />
         </div>
 
-        {/* Grid */}
         <ProductGrid templates={filteredTemplates} />
       </section>
 
-      {/* CTA Section */}
+      {/* ── CTA Section — Option C ── */}
       <section className="border-t border-devcraft-border">
         <div className="max-w-7xl mx-auto px-6 py-20 md:py-28">
           <motion.div
             initial={{ opacity: 0, y: 30 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
-            className="relative overflow-hidden rounded-2xl bg-devcraft-surface border border-devcraft-border p-10 md:p-16 text-center"
+            className="relative overflow-hidden rounded-[4px] bg-devcraft-surface border border-devcraft-border"
           >
-            {/* Glow */}
-            <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[600px] h-[300px] bg-devcraft-violet/10 rounded-full blur-[100px] pointer-events-none" />
+            {/* Violet → emerald accent bar */}
+            <div
+              className="h-[2px] w-full"
+              style={{
+                background: "linear-gradient(90deg, #8b5cf6, #10b981)",
+              }}
+            />
 
-            <div className="relative z-10 max-w-2xl mx-auto">
-              <h2 className="text-3xl md:text-4xl font-bold text-white mb-4">
-                Ready to ship faster?
+            <div className="p-10 md:p-14">
+              {/* Badge */}
+              <div className="inline-flex items-center gap-2 bg-devcraft-violet/[0.12] border border-devcraft-violet/30 text-devcraft-violet-glow font-mono text-[9px] uppercase tracking-[0.12em] px-3 py-[5px] rounded-[3px] mb-8">
+                <span className="w-[4px] h-[4px] rounded-full bg-devcraft-emerald shadow-[0_0_5px_rgba(16,185,129,0.6)]" />
+                Production-Ready
+              </div>
+
+              {/* Headline */}
+              <h2 className="font-display text-[clamp(36px,5vw,56px)] leading-[1.0] tracking-[-0.02em] text-white font-normal mb-8">
+                Ship your next project<br />
+                <span className="italic text-white/45">in hours, not weeks.</span>
               </h2>
-              <p className="text-slate-400 mb-8 text-lg">
-                Join thousands of developers building with DevCraft templates. 
-                Get instant access to production-ready codebases.
-              </p>
-              <div className="flex flex-col sm:flex-row gap-4 justify-center">
-                <a
-                  href="#templates"
-                  className="inline-flex items-center justify-center gap-2 px-8 py-4 bg-devcraft-violet hover:bg-violet-600
-                           text-white font-semibold rounded-xl transition-all duration-200 hover:shadow-violet-glow"
-                >
-                  <Zap className="w-5 h-5" />
-                  Browse Templates
-                </a>
-                <a
-                  href="#"
-                  className="inline-flex items-center justify-center gap-2 px-8 py-4 bg-devcraft-card border border-devcraft-border
-                           text-slate-300 hover:text-white font-semibold rounded-xl transition-all duration-200
-                           hover:border-devcraft-border-hover"
-                >
-                  View License
-                </a>
+
+              {/* Tech stack pills */}
+              <div className="flex flex-wrap gap-2 mb-10">
+                {["Next.js", "React", "Tailwind CSS", "Neon DB", "TypeScript", "Vercel-ready", "Shadcn UI"].map(
+                  (tech) => (
+                    <span
+                      key={tech}
+                      className="font-mono text-[9px] uppercase tracking-[0.1em] text-devcraft-slate border border-devcraft-border px-3 py-1 rounded-full"
+                    >
+                      {tech}
+                    </span>
+                  )
+                )}
+              </div>
+
+              {/* Footer row */}
+              <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6 pt-8 border-t border-devcraft-border">
+                {/* Trust strip */}
+                <div className="flex flex-wrap gap-5">
+                  {["Extended license", "M-Pesa + Card", "Instant download"].map((item) => (
+                    <span
+                      key={item}
+                      className="flex items-center gap-[5px] font-mono text-[9px] uppercase tracking-[0.08em] text-devcraft-slate-dark"
+                    >
+                      <span className="w-[12px] h-[12px] rounded-full border border-devcraft-slate-dark flex items-center justify-center text-devcraft-emerald text-[7px] shrink-0">
+                        ✓
+                      </span>
+                      {item}
+                    </span>
+                  ))}
+                </div>
+
+                {/* CTA buttons */}
+                <div className="flex items-center gap-3 shrink-0">
+                  <a
+                    href="#templates"
+                    className="flex items-center gap-2 px-6 py-3 bg-devcraft-violet hover:bg-devcraft-violet-glow text-white font-mono text-[10px] font-medium uppercase tracking-[0.1em] rounded-[3px] transition-all duration-200 hover:shadow-violet-glow active:scale-[0.98] whitespace-nowrap"
+                  >
+                    Browse Templates
+                    <ArrowRight className="w-3 h-3" />
+                  </a>
+                  <a
+                    href="/license"
+                    className="flex items-center gap-2 px-6 py-3 bg-transparent border border-devcraft-border hover:border-devcraft-border-hover text-devcraft-slate-light hover:text-white font-mono text-[10px] uppercase tracking-[0.1em] rounded-[3px] transition-all duration-200 whitespace-nowrap"
+                  >
+                    View License
+                  </a>
+                </div>
               </div>
             </div>
           </motion.div>
         </div>
       </section>
+
     </div>
   )
 }
