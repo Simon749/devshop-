@@ -171,7 +171,7 @@ export function HomePageClient({ templates, isKenyan }: HomePageClientProps) {
                 {/* CTA buttons */}
                 <div className="flex items-center gap-3 shrink-0">
                   <a
-                    href="#templates"
+                    href="/templates"
                     className="flex items-center gap-2 px-6 py-3 bg-devcraft-violet hover:bg-devcraft-violet-glow text-white font-mono text-[10px] font-medium uppercase tracking-[0.1em] rounded-[3px] transition-all duration-200 hover:shadow-violet-glow active:scale-[0.98] whitespace-nowrap"
                   >
                     Browse Templates

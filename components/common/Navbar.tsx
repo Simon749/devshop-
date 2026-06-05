@@ -5,10 +5,10 @@ import { motion, AnimatePresence } from "framer-motion"
 import { Menu, X, ShoppingCart, ArrowRight } from "lucide-react"
 
 const navLinks = [
-  { label: "Templates", href: "/#templates" },
-  { label: "Pricing",   href: "/#pricing" },
-  { label: "License",   href: "/#license" },
-  { label: "Docs",      href: "/#docs" },
+  { label: "Templates", href: "/templates" },
+  { label: "Pricing",   href: "/pricing" },
+  { label: "License",   href: "/license" },
+  { label: "Docs",      href: "/docs" },
 ]
 
 export function Navbar() {
@@ -93,7 +93,7 @@ export function Navbar() {
 
               {/* CTA */}
               <a
-                href="/#templates"
+                href="/templates"
                 className="hidden md:flex items-center gap-2 px-4 py-2 rounded-[4px]
                            bg-devcraft-violet hover:bg-devcraft-violet-glow text-white
                            font-mono text-[10px] font-medium uppercase tracking-[0.1em]
@@ -172,7 +172,7 @@ export function Navbar() {
 
               <div className="pt-3 mt-2 border-t border-devcraft-border">
                 <a
-                  href="/#templates"
+                  href="/templates"
                   onClick={() => setMobileOpen(false)}
                   className="flex items-center justify-center gap-2 w-full px-4 py-3 rounded-[4px]
                              bg-devcraft-violet hover:bg-devcraft-violet-glow text-white

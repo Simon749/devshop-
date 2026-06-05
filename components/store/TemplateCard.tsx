@@ -1,12 +1,13 @@
 "use client"
 
 import { motion } from "framer-motion"
-import { ExternalLink, Download, Sparkles } from "lucide-react"
+import { ExternalLink, Download, Sparkles, ShoppingCart } from "lucide-react"
 import Link from "next/link"
 import { Template } from "@/types"
 import { formatPriceCompact } from "@/lib/utils"
 import { useCurrency } from "@/components/store/CurrencyProvider"
 import { getUploadThingUrl } from "@/lib/uploadthing-client"
+import { useCart } from "@/lib/cart-store"
 
 interface TemplateCardProps {
   template: Template
@@ -23,10 +24,28 @@ const categoryColors: Record<string, string> = {
 
 export function TemplateCard({ template, index }: TemplateCardProps) {
   const { isKenyan } = useCurrency()
+  const { addItem, items } = useCart()
+
+  const isInCart = items.some((i) => i.id === template.id)
 
   const imageSource = template.screenshots?.[0]
     ? getUploadThingUrl(template.screenshots[0])
     : "/placeholder.png"
+
+  const handleAddToCart = (e: React.MouseEvent) => {
+    e.preventDefault()
+    e.stopPropagation()
+    addItem({
+      id: template.id,
+      title: template.title,
+      slug: template.slug,
+      priceUsd: template.priceUsd,
+      priceKes: template.priceKes,
+      isFree: template.isFree,
+      thumbnailUrl: template.thumbnailUrl ?? "/placeholder.png",
+      category: template.category,
+    })
+  }
 
   return (
     <motion.div
@@ -35,10 +54,8 @@ export function TemplateCard({ template, index }: TemplateCardProps) {
       exit={{ opacity: 0, y: -20 }}
       transition={{ duration: 0.4, delay: index * 0.08 }}
       layout
-      // FIX 1: Ensure the framer-motion wrapper spans the full height of the grid cell
       className="group relative h-full flex"
     >
-      {/* FIX 2: Added 'flex flex-col h-full w-full' to ensure the card container expands fully */}
       <div className="relative bg-devcraft-card border border-devcraft-border rounded-xl overflow-hidden
                       flex flex-col h-full w-full
                       transition-all duration-500 ease-out
@@ -66,15 +83,23 @@ export function TemplateCard({ template, index }: TemplateCardProps) {
             </div>
           )}
 
-          {/*<div className="absolute top-3 right-3">
-            <span className="bg-black/40 backdrop-blur-sm text-white/80 text-xs px-2.5 py-1 rounded-full">
-              {template.downloadCount.toLocaleString()} downloads
-            </span>
-          </div>*/}
+          {/* Quick add to cart overlay on hover */}
+          <div className="absolute top-3 right-3 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+            <button
+              onClick={handleAddToCart}
+              className={`w-9 h-9 rounded-lg flex items-center justify-center transition-all duration-200
+                         ${isInCart
+                           ? "bg-devcraft-emerald text-white"
+                           : "bg-black/50 backdrop-blur-sm text-white hover:bg-devcraft-violet"
+                         }`}
+              title={isInCart ? "In cart" : "Add to cart"}
+            >
+              <ShoppingCart className="w-4 h-4" />
+            </button>
+          </div>
         </div>
 
-        {/* Content Body Container */}
-        {/* FIX 3: Turned this wrapper into a column flexbox that grows to fill remaining space */}
+        {/* Content Body */}
         <div className="p-5 flex flex-col flex-grow">
 
           <div className="flex items-center gap-2 mb-2">
@@ -91,7 +116,7 @@ export function TemplateCard({ template, index }: TemplateCardProps) {
             {template.description}
           </p>
 
-          {/* Tech Tags Container */}
+          {/* Tech Tags */}
           <div className="flex flex-wrap gap-1.5 mb-5">
             {template.techStack.slice(0, 4).map((tech) => (
               <span
@@ -109,8 +134,7 @@ export function TemplateCard({ template, index }: TemplateCardProps) {
             )}
           </div>
 
-          {/* Footer Pricing & CTA Section */}
-          {/* FIX 4: Changed 'pt-3' to 'mt-auto pt-3' to forcefully pin this row to the bottom edge */}
+          {/* Footer */}
           <div className="flex items-center justify-between mt-auto pt-3 border-t border-devcraft-border">
             <div className="flex flex-col">
               {template.isFree ? (
@@ -133,13 +157,17 @@ export function TemplateCard({ template, index }: TemplateCardProps) {
                 <ExternalLink className="w-3.5 h-3.5" />
                 Preview
               </button>
+
+              
+
               <Link href={`/template/${template.slug}`}>
                 <button
-                  className="flex items-center gap-1.5 px-4 py-2 rounded-lg bg-devcraft-violet text-white text-xs font-semibold
-                             hover:bg-violet-600 hover:shadow-violet-glow transition-all duration-200 active:scale-[0.97]"
+                  className="flex items-center gap-1.5 px-3 py-2 rounded-lg bg-devcraft-surface border border-devcraft-border
+                             text-slate-400 text-xs font-medium hover:text-white hover:border-devcraft-border-hover
+                             transition-all duration-200"
                 >
                   <Download className="w-3.5 h-3.5" />
-                  Get License
+                  Details
                 </button>
               </Link>
             </div>
