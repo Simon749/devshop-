@@ -1,11 +1,13 @@
 "use client"
 
+import { Suspense } from "react"
 import { useEffect, useState } from "react"
 import { useSearchParams } from "next/navigation"
 import { Loader2, Download, Mail } from "lucide-react"
 import Link from "next/link"
 
-export default function PaymentSuccessPage() {
+// Move the actual page logic into a separate inner component
+function PaymentSuccessContent() {
   const searchParams = useSearchParams()
   const reference = searchParams.get("reference")
   const [status, setStatus] = useState<"loading" | "success" | "error">("loading")
@@ -21,25 +23,17 @@ export default function PaymentSuccessPage() {
 
     async function verify() {
       try {
-        console.log("[SUCCESS PAGE] Verifying reference:", reference)
         const res = await fetch(`/api/checkout/paystack/verify?reference=${reference}`)
         const data = await res.json()
-
-        console.log("[SUCCESS PAGE] Verify response:", res.status, data)
-
-        // UPDATED LOGIC: Checking explicitly for data.verified as requested
         if (data.verified) {
           setStatus("success")
           setMessage(data.message || "Payment confirmed!")
-          if (data.downloadUrl) {
-            setDownloadUrl(data.downloadUrl)
-          }
+          if (data.downloadUrl) setDownloadUrl(data.downloadUrl)
         } else {
           setStatus("error")
           setMessage(data.message || "Payment could not be verified.")
         }
       } catch (err: any) {
-        console.error("[SUCCESS PAGE] Error:", err.message)
         setStatus("error")
         setMessage(err.message || "Something went wrong")
       }
@@ -58,7 +52,6 @@ export default function PaymentSuccessPage() {
             <p className="text-neutral-400">Please wait while we confirm your purchase.</p>
           </>
         )}
-
         {status === "success" && (
           <>
             <div className="w-16 h-16 rounded-full bg-emerald-500/20 flex items-center justify-center mx-auto">
@@ -66,23 +59,17 @@ export default function PaymentSuccessPage() {
             </div>
             <h1 className="text-2xl font-bold">Payment Successful!</h1>
             <p className="text-neutral-400">{message}</p>
-            
             {downloadUrl && (
-              <a
-                href={downloadUrl}
-                className="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-medium transition"
-              >
+              <a href={downloadUrl} className="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-medium transition">
                 <Download className="w-4 h-4" /> Download Now
               </a>
             )}
-
             <div className="flex items-center gap-2 text-sm text-neutral-500 justify-center">
               <Mail className="w-4 h-4" />
               <span>We've also sent a download link to your email</span>
             </div>
           </>
         )}
-
         {status === "error" && (
           <>
             <div className="w-16 h-16 rounded-full bg-red-500/20 flex items-center justify-center mx-auto">
@@ -90,15 +77,25 @@ export default function PaymentSuccessPage() {
             </div>
             <h1 className="text-xl font-bold text-red-400">Payment Failed</h1>
             <p className="text-neutral-400">{message}</p>
-            <Link
-              href="/"
-              className="inline-block px-6 py-3 rounded-xl border border-neutral-700 hover:bg-neutral-800 transition"
-            >
+            <Link href="/" className="inline-block px-6 py-3 rounded-xl border border-neutral-700 hover:bg-neutral-800 transition">
               Back to Store
             </Link>
           </>
         )}
       </div>
     </div>
+  )
+}
+
+// Default export wraps with Suspense — this is what Next.js requires
+export default function PaymentSuccessPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen bg-neutral-950 text-white flex items-center justify-center">
+        <Loader2 className="w-12 h-12 animate-spin text-emerald-500" />
+      </div>
+    }>
+      <PaymentSuccessContent />
+    </Suspense>
   )
 }
