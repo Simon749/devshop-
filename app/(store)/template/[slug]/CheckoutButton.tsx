@@ -2,7 +2,7 @@
 
 import { useState } from "react"
 import { CheckoutModal } from "@/components/store/CheckoutModal"
-import { Template } from "@/types"
+import { Template } from "@/db/schema"
 
 
 
@@ -43,7 +43,7 @@ const isFree = Number(template.priceUsd) === 0 && Number(template.priceKes) === 
           template={{
             ...template,
             isFree: isFree,
-            thumbnailUrl: template.thumbnailUrl ?? "",
+            thumbnailUrl: "",
             // If priceUsd/priceKes are stored as strings in DB, parse them cleanly to numbers
             priceUsd: Number(template.priceUsd),
             priceKes: Number(template.priceKes)
