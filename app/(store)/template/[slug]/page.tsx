@@ -62,10 +62,10 @@ export default async function TemplatePage({ params }: PageProps) {
   }
 
   const priceDisplay = formatPrice(
-    Number(template.priceUsd),
-    Number(template.priceKes),
-    isKenyan
-  )
+  Number(template.priceUsd),
+  Number(template.priceKes),
+  false
+)
 
   return (
     <main className="min-h-screen bg-neutral-950 text-white">
