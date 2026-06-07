@@ -5,15 +5,23 @@ export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs))
 }
 
-export function formatPriceCompact(priceUsd: number | string, priceKes: number | string, isKenyan?: boolean): string {
+export function formatPriceCompact(priceUsd: number | string, priceKes: number | string, isKenyan: boolean): string {
   const usd = Number(priceUsd)
-  if (usd === 0) return "FREE"
+  const kes = Number(priceKes)
+  if (usd === 0 && kes === 0) return "FREE"
+  if (isKenyan) {
+    return `KES ${kes.toLocaleString("en-KE")}`
+  }
   return `$${usd.toFixed(2)}`
 }
 
-export function formatPrice(priceUsd: number | string, priceKes: number | string, isKenyan?: boolean): string {
+export function formatPrice(priceUsd: number | string, priceKes: number | string, isKenyan: boolean): string {
   const usd = Number(priceUsd)
-  if (usd === 0) return "FREE"
+  const kes = Number(priceKes)
+  if (usd === 0 && kes === 0) return "FREE"
+  if (isKenyan) {
+    return `KES ${kes.toLocaleString("en-KE")}`
+  }
   return `$${usd.toFixed(2)} USD`
 }
 

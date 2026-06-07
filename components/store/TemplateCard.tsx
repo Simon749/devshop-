@@ -141,7 +141,7 @@ export function TemplateCard({ template, index }: TemplateCardProps) {
                 <span className="text-devcraft-emerald font-bold text-lg">FREE</span>
               ) : (
                 <span className="text-white font-semibold text-sm">
-                  {formatPriceCompact(template.priceUsd, template.priceKes, isKenyan)}
+                  {formatPriceCompact(template.priceUsd, template.priceKes, false)}
                 </span>
               )}
             </div>
