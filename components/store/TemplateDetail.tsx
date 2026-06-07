@@ -37,7 +37,10 @@ export function TemplateDetailClient({ template }: TemplateDetailClientProps) {
     landing: "bg-devcraft-emerald/10 text-devcraft-emerald border-devcraft-emerald/20",
   }
 
-  const allImages = [template.thumbnailUrl, ...template.screenshots.filter((s) => s !== template.thumbnailUrl)]
+  const allImages = [
+    template.thumbnailUrl,
+    ...template.screenshots.filter((s) => s !== template.thumbnailUrl)
+  ].filter((s): s is string => s !== null && s !== undefined)
 
   return (
     <div className="min-h-screen bg-devcraft-bg">
