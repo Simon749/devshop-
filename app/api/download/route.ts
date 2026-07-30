@@ -1,3 +1,5 @@
+// app/api/download/route.ts
+
 import { NextRequest, NextResponse } from "next/server"
 import { db } from "@/db"
 import { templates, downloadHistory } from "@/db/schema"

@@ -1,4 +1,4 @@
-// src/lib/mpesa.ts
+// lib/mpesa.ts
 
 const BASE_URL = process.env.MPESA_ENV === "production" 
   ? "https://api.safaricom.co.ke" 

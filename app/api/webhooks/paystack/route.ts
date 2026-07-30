@@ -1,3 +1,5 @@
+// app/api/webhooks/paystack/route.ts
+
 import { NextRequest, NextResponse } from "next/server"
 import { db } from "@/db"
 import { orders, templates, subscribers, downloadHistory } from "@/db/schema"

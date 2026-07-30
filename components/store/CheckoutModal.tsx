@@ -1,3 +1,4 @@
+// components/store/CheckoutModal.tsx
 "use client"
 
 import { useState, useEffect } from "react"

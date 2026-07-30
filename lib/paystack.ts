@@ -1,4 +1,4 @@
-// src/lib/paystack.ts
+// lib/paystack.ts
 
 const BASE_URL = "https://api.paystack.co"
 

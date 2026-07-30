@@ -1,3 +1,4 @@
+// services/emails.ts
 import { Resend } from "resend";
 import { PurchaseConfirmation } from "@/emails/PurchaseConfirmation";
 import { RecoverDownload } from "@/emails/RecoverDownload";
@@ -19,7 +20,7 @@ export async function sendPurchaseConfirmation({
   downloadToken: string;
   expiresAt: Date;
 }) {
-  const downloadUrl = `${APP_URL}/api/download?token=${downloadToken}`;
+const downloadUrl = `${APP_URL}/download/${downloadToken}`;   // was /api/download?token=...
 
   return resend.emails.send({
     from: FROM,

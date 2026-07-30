@@ -8,7 +8,7 @@ const nextConfig: NextConfig = {
         hostname: "*.ufs.sh",
       },
       {
-        protocol: "https", 
+        protocol: "https",
         hostname: "utfs.io",
       },
       {
@@ -22,22 +22,20 @@ const nextConfig: NextConfig = {
       {
         source: "/(.*)",
         headers: [
-          {
-            key: "X-Frame-Options",
-            value: "DENY",
-          },
-          {
-            key: "X-Content-Type-Options",
-            value: "nosniff",
-          },
-          {
-            key: "Referrer-Policy",
-            value: "strict-origin-when-cross-origin",
-          },
+          { key: "X-Frame-Options", value: "DENY" },
+          { key: "X-Content-Type-Options", value: "nosniff" },
+          { key: "Referrer-Policy", value: "strict-origin-when-cross-origin" },
         ],
+      },
+      {
+        source: "/download/:path*",
+        headers: [{ key: "Referrer-Policy", value: "no-referrer" }],
+      },
+      {
+        source: "/api/download/:path*",
+        headers: [{ key: "Referrer-Policy", value: "no-referrer" }],
       },
     ];
   },
 };
 
-export default nextConfig;

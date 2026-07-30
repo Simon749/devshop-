@@ -1,14 +1,9 @@
+// lib/orders.ts
 import { db } from "@/db";
 import { orders, type NewOrder } from "@/db/schema";
-import { eq } from "drizzle-orm";
+import { eq, and } from "drizzle-orm";
 
-/**
- * Idempotent order upsert.
- * If checkout_session_id already exists, return existing order (prevents double-write).
- * If not, insert new pending order.
- */
 export async function upsertOrder(data: NewOrder) {
-  // Check for existing order by idempotency key
   const existing = await db
     .select()
     .from(orders)
@@ -19,36 +14,27 @@ export async function upsertOrder(data: NewOrder) {
     return { order: existing[0], isNew: false };
   }
 
-  // Insert new order
   const [order] = await db.insert(orders).values(data).returning();
   return { order, isNew: true };
 }
 
+type CompletionUpdate = {
+  gatewayRef: string;
+  downloadToken: string;
+  tokenExpiresAt: Date;
+};
+
 /**
- * Mark order as completed — idempotent.
- * If already completed, return existing without side effects.
+ * Atomically flips a pending order to completed.
+ * The "pending" guard lives in the WHERE clause itself, so Postgres — not
+ * app code — decides which of two concurrent webhook deliveries wins.
+ * Returns isNewCompletion: false if the row was already completed
+ * (or didn't exist), so callers never double-send email/tokens.
  */
-export async function completeOrder(
-  checkoutSessionId: string,
-  updates: { gatewayRef: string; downloadToken: string; tokenExpiresAt: Date }
+async function atomicComplete(
+  whereClause: ReturnType<typeof eq>,
+  updates: CompletionUpdate
 ) {
-  const existing = await db
-    .select()
-    .from(orders)
-    .where(eq(orders.checkoutSessionId, checkoutSessionId))
-    .limit(1);
-
-  if (existing.length === 0) {
-    throw new Error(`Order not found: ${checkoutSessionId}`);
-  }
-
-  const order = existing[0];
-
-  // Already completed → idempotent no-op
-  if (order.paymentStatus === "completed") {
-    return { order, isNewCompletion: false };
-  }
-
   const [updated] = await db
     .update(orders)
     .set({
@@ -57,46 +43,29 @@ export async function completeOrder(
       downloadToken: updates.downloadToken,
       tokenExpiresAt: updates.tokenExpiresAt,
     })
-    .where(eq(orders.checkoutSessionId, checkoutSessionId))
+    .where(and(whereClause, eq(orders.paymentStatus, "pending")))
     .returning();
 
+  if (!updated) {
+    return { order: null, isNewCompletion: false };
+  }
   return { order: updated, isNewCompletion: true };
 }
 
-/**
- * Complete order by M-Pesa gateway request ID (CheckoutRequestID).
- * Used by M-Pesa webhook since Daraja doesn't return our custom reference.
- */
+export async function completeOrder(checkoutSessionId: string, updates: CompletionUpdate) {
+  return atomicComplete(eq(orders.checkoutSessionId, checkoutSessionId), updates);
+}
+
 export async function completeOrderByGatewayRequestId(
   gatewayRequestId: string,
-  updates: { gatewayRef: string; downloadToken: string; tokenExpiresAt: Date }
+  updates: CompletionUpdate
 ) {
-  const existing = await db
-    .select()
-    .from(orders)
-    .where(eq(orders.gatewayRequestId, gatewayRequestId))
-    .limit(1);
+  return atomicComplete(eq(orders.gatewayRequestId, gatewayRequestId), updates);
+}
 
-  if (existing.length === 0) {
-    throw new Error(`Order not found for gateway request: ${gatewayRequestId}`);
-  }
-
-  const order = existing[0];
-
-  if (order.paymentStatus === "completed") {
-    return { order, isNewCompletion: false };
-  }
-
-  const [updated] = await db
+export async function markOrderFailed(orderId: string) {
+  await db
     .update(orders)
-    .set({
-      paymentStatus: "completed",
-      gatewayRef: updates.gatewayRef,
-      downloadToken: updates.downloadToken,
-      tokenExpiresAt: updates.tokenExpiresAt,
-    })
-    .where(eq(orders.gatewayRequestId, gatewayRequestId))
-    .returning();
-
-  return { order: updated, isNewCompletion: true };
+    .set({ paymentStatus: "failed" })
+    .where(and(eq(orders.id, orderId), eq(orders.paymentStatus, "pending")));
 }
