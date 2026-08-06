@@ -1,120 +1,98 @@
-// app/api/webhooks/mpesa/[secret]/route.ts
+// app/api/checkout/mpesa/route.ts
 import { NextRequest, NextResponse } from "next/server"
 import { db } from "@/db"
-import { orders, templates, subscribers } from "@/db/schema"
-import { eq, sql } from "drizzle-orm"
-import { queryTransaction } from "@/lib/mpesa"
-import { generateDownloadToken, getTokenExpiry } from "@/lib/tokens"
-import { sendPurchaseConfirmation } from "@/services/emails"
-import { completeOrderByGatewayRequestId, markOrderFailed } from "@/lib/orders"
+import { orders, templates } from "@/db/schema"
+import { eq } from "drizzle-orm"
+import { nanoid } from "nanoid"
+import { initiateStkPush, normalizePhone } from "@/lib/mpesa"
 
-function getCallbackValue(callback: any, key: string): string | undefined {
-  const items = callback?.CallbackMetadata?.Item
-  if (!Array.isArray(items)) return undefined
-  const found = items.find((i: any) => i.Name === key)
-  return found?.Value?.toString()
-}
-
-export async function POST(req: NextRequest, { params }: { params: Promise<{ secret: string }> }) {
-  const { secret } = await params
-  if (secret !== process.env.MPESA_WEBHOOK_SECRET) {
-    console.warn("[M-PESA WEBHOOK] Invalid secret segment — rejecting")
-    return NextResponse.json({ message: "Not found" }, { status: 404 })
-  }
-
+export async function POST(req: NextRequest) {
   try {
     const body = await req.json()
-    const callback = body?.Body?.stkCallback
-    if (!callback) {
-      return NextResponse.json({ message: "Invalid callback" }, { status: 400 })
+    const { email, phone, templateId, checkoutSessionId } = body ?? {}
+
+    if (!email || typeof email !== "string") {
+      return NextResponse.json({ message: "Email is required" }, { status: 400 })
     }
-
-    const checkoutRequestId = callback.CheckoutRequestID
-    const resultCode = callback.ResultCode
-
-    if (!checkoutRequestId) {
-      return NextResponse.json({ message: "Missing CheckoutRequestID" }, { status: 400 })
-    }
-
-    const [order] = await db
-      .select()
-      .from(orders)
-      .where(eq(orders.gatewayRequestId, checkoutRequestId))
-      .limit(1)
-
-    if (!order) {
-      console.warn(`[M-PESA WEBHOOK] Order not found: ${checkoutRequestId}`)
-      return NextResponse.json({ message: "Order not found" }, { status: 200 })
-    }
-
-    if (order.paymentStatus === "completed") {
-      return NextResponse.json({ message: "Already processed" })
-    }
-
-    if (resultCode !== 0) {
-      await markOrderFailed(order.id)
-      return NextResponse.json({ message: "Failed recorded" })
-    }
-
-    // ── Do NOT trust the callback payload alone (D6) ──
-    // Confirm independently via the Daraja query API before fulfilling.
-    let confirmed = false
+    let normalizedPhone: string
     try {
-      const verification = await queryTransaction(checkoutRequestId)
-      confirmed = verification.ResultCode === "0" || verification.ResultCode === 0
-    } catch (err: any) {
-      console.error("[M-PESA WEBHOOK] Query verification failed:", err.message)
+      normalizedPhone = normalizePhone(phone ?? "")
+    } catch {
+      return NextResponse.json(
+        { message: "Phone must be in format 07XXXXXXXX or 2547XXXXXXXX" },
+        { status: 400 }
+      )
     }
-
-    if (!confirmed) {
-      console.warn(`[M-PESA WEBHOOK] Callback claimed success but query did not confirm: ${checkoutRequestId}`)
-      // Don't fulfil, don't mark failed either — leave pending for the cron to
-      // re-check / expire, in case Daraja's query API is just lagging.
-      return NextResponse.json({ message: "Unconfirmed — left pending" })
-    }
-
-    const mpesaReceiptNumber = getCallbackValue(callback, "MpesaReceiptNumber")
-    const token = generateDownloadToken()
-    const expiresAt = getTokenExpiry()
-
-    const { isNewCompletion } = await completeOrderByGatewayRequestId(checkoutRequestId, {
-      gatewayRef: mpesaReceiptNumber || checkoutRequestId,
-      downloadToken: token,
-      tokenExpiresAt: expiresAt,
-    })
-
-    if (!isNewCompletion) {
-      return NextResponse.json({ message: "Already processed" })
+    if (!templateId) {
+      return NextResponse.json({ message: "templateId is required" }, { status: 400 })
     }
 
     const [template] = await db
       .select()
       .from(templates)
-      .where(eq(templates.id, order.templateId!))
+      .where(eq(templates.id, templateId))
       .limit(1)
 
-    await db
-      .insert(subscribers)
-      .values({ email: order.customerEmail, source: "purchase", templateId: order.templateId })
-      .onConflictDoUpdate({
-        target: subscribers.email,
-        set: { lastActiveAt: new Date(), totalPurchases: sql`${subscribers.totalPurchases} + 1` },
-      })
-
-    try {
-      await sendPurchaseConfirmation({
-        customerEmail: order.customerEmail,
-        templateTitle: template?.title ?? "Your Template",
-        downloadToken: token,
-        expiresAt,
-      })
-    } catch (emailErr: any) {
-      console.error("[M-PESA WEBHOOK] Email failed:", emailErr.message)
+    if (!template || !template.isPublished) {
+      return NextResponse.json({ message: "Template not found" }, { status: 404 })
     }
 
-    return NextResponse.json({ message: "Success" })
+    // Idempotency key — either client-generated (nanoid, per D4/D1 in the
+    // progress tracker) or generated here as a fallback.
+    const sessionId = checkoutSessionId || nanoid()
+
+    // DB has a UNIQUE constraint on checkout_session_id — a duplicate rapid
+    // tap will collide here and we return 409 instead of double-charging.
+    const [existing] = await db
+      .select()
+      .from(orders)
+      .where(eq(orders.checkoutSessionId, sessionId))
+      .limit(1)
+
+    if (existing) {
+      return NextResponse.json(
+        { message: "Checkout already in progress for this session" },
+        { status: 409 }
+      )
+    }
+
+    // template.priceKes comes back as a string (Drizzle numeric() columns are
+    // typed as string, not number, to avoid precision loss). Keep a numeric
+    // copy for the M-Pesa call and pass the string straight through to the DB.
+    const amountNumeric = Number(template.priceKes)
+    const amountForDb = template.priceKes // already a string
+
+    const [order] = await db
+      .insert(orders)
+      .values({
+        checkoutSessionId: sessionId,
+        customerEmail: email,
+        templateId: template.id,
+        amountPaid: amountForDb,
+        currency: "KES",
+        paymentGateway: "mpesa",
+        paymentStatus: "pending",
+      })
+      .returning()
+
+    const stkResponse = await initiateStkPush({
+      phone: normalizedPhone,
+      amount: amountNumeric,
+      orderId: order.id,
+    })
+
+    // Store Daraja's CheckoutRequestID so the webhook can find this order later.
+    await db
+      .update(orders)
+      .set({ gatewayRequestId: stkResponse.checkoutRequestId })
+      .where(eq(orders.id, order.id))
+
+    return NextResponse.json({
+      checkoutRequestId: stkResponse.checkoutRequestId,
+      message: "Check your phone for the M-Pesa prompt",
+    })
   } catch (err: any) {
-    console.error("[M-PESA WEBHOOK ERROR]", err)
-    return NextResponse.json({ message: "Error logged" }, { status: 200 })
+    console.error("[MPESA CHECKOUT ERROR]", err)
+    return NextResponse.json({ message: "Failed to initiate payment" }, { status: 500 })
   }
 }
