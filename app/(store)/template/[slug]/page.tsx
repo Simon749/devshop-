@@ -9,7 +9,7 @@ import { CheckoutButton } from "./CheckoutButton"
 import { formatPrice, detectKenyaMarket } from "@/lib/utils"
 import { headers } from "next/headers"
 
-const SITE_URL = process.env.NEXT_PUBLIC_APP_URL || "https://devshop-lc2s.vercel.app/"
+const SITE_URL = process.env.NEXT_PUBLIC_APP_URL || "https://devcraft.shop"
 
 interface PageProps {
   params: Promise<{ slug: string }>
