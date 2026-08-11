@@ -354,7 +354,7 @@ export function CheckoutModal({ template, onClose }: CheckoutModalProps) {
                   {isLoading ? <><Loader2 className="w-5 h-5 animate-spin" /> Processing...</> : 
                    rateLoading ? <><Loader2 className="w-5 h-5 animate-spin" /> Getting rate...</> :
                    template.isFree ? <><Download className="w-5 h-5" /> Get Free Download</> : 
-                   <><Sparkles className="w-5 h-5" /> Pay {displayCurrency === "KES" ? `KES ${displayAmount.toLocaleString()}` : `$${displayAmount.toFixed(2)}`} <ArrowRight className="w-5 h-5" /></>}
+                   <> Pay {displayCurrency === "KES" ? `KES ${displayAmount.toLocaleString()}` : `$${displayAmount.toFixed(2)}`} <ArrowRight className="w-5 h-5" /></>}
                 </button>
               </motion.div>
             )}

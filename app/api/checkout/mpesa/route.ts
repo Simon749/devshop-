@@ -5,6 +5,17 @@ import { orders, templates } from "@/db/schema"
 import { eq } from "drizzle-orm"
 import { nanoid } from "nanoid"
 import { initiateStkPush, normalizePhone } from "@/lib/mpesa"
+import { getEffectivePrice } from "@/lib/prices"
+
+async function getExchangeRate(): Promise<number> {
+  // Reuse your existing endpoint or fetch directly
+  const res = await fetch(`${process.env.NEXT_PUBLIC_APP_URL}/api/exchange-rate`, {
+    cache: "no-store",
+  })
+  if (!res.ok) throw new Error("Failed to fetch exchange rate")
+  const data = await res.json()
+  return data.rate as number
+}
 
 export async function POST(req: NextRequest) {
   try {
@@ -14,6 +25,7 @@ export async function POST(req: NextRequest) {
     if (!email || typeof email !== "string") {
       return NextResponse.json({ message: "Email is required" }, { status: 400 })
     }
+
     let normalizedPhone: string
     try {
       normalizedPhone = normalizePhone(phone ?? "")
@@ -23,6 +35,7 @@ export async function POST(req: NextRequest) {
         { status: 400 }
       )
     }
+
     if (!templateId) {
       return NextResponse.json({ message: "templateId is required" }, { status: 400 })
     }
@@ -37,12 +50,19 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ message: "Template not found" }, { status: 404 })
     }
 
-    // Idempotency key — either client-generated (nanoid, per D4/D1 in the
-    // progress tracker) or generated here as a fallback.
+    // ── Get effective KES price (convert from USD if needed) ────────
+    const rate = await getExchangeRate()
+    const { amount: amountKes, wasConverted } = getEffectivePrice(template, "KES", rate)
+
+    if (amountKes <= 0) {
+      return NextResponse.json(
+        { message: "Template has no valid price. Cannot checkout for free via M-Pesa." },
+        { status: 400 }
+      )
+    }
+
     const sessionId = checkoutSessionId || nanoid()
 
-    // DB has a UNIQUE constraint on checkout_session_id — a duplicate rapid
-    // tap will collide here and we return 409 instead of double-charging.
     const [existing] = await db
       .select()
       .from(orders)
@@ -50,49 +70,65 @@ export async function POST(req: NextRequest) {
       .limit(1)
 
     if (existing) {
-      return NextResponse.json(
-        { message: "Checkout already in progress for this session" },
-        { status: 409 }
-      )
+      if (existing.paymentStatus === "failed") {
+        await db.delete(orders).where(eq(orders.id, existing.id))
+      } else {
+        return NextResponse.json(
+          { message: "Checkout already in progress for this session" },
+          { status: 409 }
+        )
+      }
     }
 
-    // template.priceKes comes back as a string (Drizzle numeric() columns are
-    // typed as string, not number, to avoid precision loss). Keep a numeric
-    // copy for the M-Pesa call and pass the string straight through to the DB.
-    const amountNumeric = Number(template.priceKes)
-    const amountForDb = template.priceKes // already a string
-
+    // Store the *converted* amount so the ledger is accurate
     const [order] = await db
       .insert(orders)
       .values({
         checkoutSessionId: sessionId,
         customerEmail: email,
         templateId: template.id,
-        amountPaid: amountForDb,
+        amountPaid: String(amountKes),
         currency: "KES",
         paymentGateway: "mpesa",
         paymentStatus: "pending",
       })
       .returning()
 
-    const stkResponse = await initiateStkPush({
-      phone: normalizedPhone,
-      amount: amountNumeric,
-      orderId: order.id,
-    })
+    let stkResponse: { checkoutRequestId: string; merchantRequestId: string }
+    try {
+      stkResponse = await initiateStkPush({
+        phone: normalizedPhone,
+        amount: amountKes,
+        orderId: order.id,
+      })
+    } catch (stkErr: any) {
+      await db
+        .update(orders)
+        .set({ paymentStatus: "failed" })
+        .where(eq(orders.id, order.id))
 
-    // Store Daraja's CheckoutRequestID so the webhook can find this order later.
+      console.error("[M-PESA STK FAILED]", stkErr)
+      return NextResponse.json(
+        { message: stkErr.message || "Failed to initiate M-Pesa payment" },
+        { status: 502 }
+      )
+    }
+
     await db
       .update(orders)
-      .set({ gatewayRequestId: stkResponse.checkoutRequestId })
+      .set({ gatewayRef: stkResponse.checkoutRequestId })
       .where(eq(orders.id, order.id))
 
     return NextResponse.json({
       checkoutRequestId: stkResponse.checkoutRequestId,
       message: "Check your phone for the M-Pesa prompt",
+      ...(wasConverted && { convertedFrom: "USD", exchangeRate: rate }),
     })
   } catch (err: any) {
     console.error("[MPESA CHECKOUT ERROR]", err)
-    return NextResponse.json({ message: "Failed to initiate payment" }, { status: 500 })
+    return NextResponse.json(
+      { message: "Failed to initiate payment" },
+      { status: 500 }
+    )
   }
 }

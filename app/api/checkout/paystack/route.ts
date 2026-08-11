@@ -6,6 +6,15 @@ import { eq, and } from "drizzle-orm"
 import { initializeTransaction } from "@/lib/paystack"
 import { checkRateLimit } from "@/lib/rate-limit"
 
+async function getExchangeRate(): Promise<number> {
+  const res = await fetch(`${process.env.NEXT_PUBLIC_APP_URL}/api/exchange-rate`, {
+    cache: "no-store",
+  })
+  if (!res.ok) throw new Error("Failed to fetch exchange rate")
+  const data = await res.json()
+  return data.rate as number
+}
+
 export async function POST(req: NextRequest) {
   try {
     const ip = req.headers.get("x-forwarded-for")?.split(",")[0].trim() ?? "unknown"
@@ -14,7 +23,6 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ message: "Too many attempts. Please wait a minute." }, { status: 429 })
     }
 
-    // NOTE: no `amount` accepted from the client at all
     const { email, templateId, checkoutSessionId, templateSlug } = await req.json()
 
     if (!email?.includes("@")) {
@@ -34,18 +42,45 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ message: "Template not found" }, { status: 404 })
     }
 
-    const amount = Number(template.priceUsd)
-    if (amount <= 0) {
-      return NextResponse.json({ message: "This template isn't payable via card" }, { status: 400 })
+    // ── Resolve effective USD amount ─────────────────────────────────
+    let amountUsd = Number(template.priceUsd)
+    let wasConverted = false
+    let exchangeRate: number | undefined
+
+    // If no USD price set, try converting from KES
+    if (!amountUsd || amountUsd <= 0) {
+      const kes = Number(template.priceKes)
+      if (kes > 0) {
+        try {
+          exchangeRate = await getExchangeRate()
+          amountUsd = Number((kes / exchangeRate).toFixed(2))
+          wasConverted = true
+        } catch (rateErr) {
+          console.error("[PAYSTACK RATE ERROR]", rateErr)
+          return NextResponse.json(
+            { message: "Unable to convert price. Please try again shortly." },
+            { status: 503 }
+          )
+        }
+      }
+    }
+
+    if (!amountUsd || amountUsd <= 0) {
+      return NextResponse.json({ message: "This template has no valid price" }, { status: 400 })
     }
 
     let authorization_url: string
     try {
       const result = await initializeTransaction({
         email,
-        amount: Math.round(amount * 100), // Paystack wants smallest unit
+        amount: Math.round(amountUsd * 100), // Paystack wants smallest unit
         reference: checkoutSessionId,
-        metadata: { templateId, templateSlug, templateTitle: template.title },
+        metadata: {
+          templateId,
+          templateSlug,
+          templateTitle: template.title,
+          ...(wasConverted && { convertedFrom: "KES", exchangeRate }),
+        },
         channels: ["card"],
       })
       authorization_url = result.authorization_url
@@ -59,7 +94,7 @@ export async function POST(req: NextRequest) {
         checkoutSessionId,
         customerEmail: email,
         templateId,
-        amountPaid: amount.toString(),
+        amountPaid: amountUsd.toString(),
         currency: "USD",
         paymentGateway: "paystack",
         paymentStatus: "pending",
@@ -72,7 +107,10 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ message: "Database error. Please try again." }, { status: 500 })
     }
 
-    return NextResponse.json({ authorization_url })
+    return NextResponse.json({
+      authorization_url,
+      ...(wasConverted && { convertedFrom: "KES", exchangeRate, amountUsd }),
+    })
   } catch (err: any) {
     console.error("[PAYSTACK CHECKOUT ERROR]", err.message, err.stack)
     return NextResponse.json({ message: "Payment initiation failed" }, { status: 500 })
