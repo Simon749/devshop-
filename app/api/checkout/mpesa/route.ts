@@ -1,4 +1,4 @@
-// app/api/checkout/mpesa/route.ts — DIAGNOSTIC VERSION
+// app/api/checkout/mpesa/route.ts
 import { NextRequest, NextResponse } from "next/server"
 import { db } from "@/db"
 import { orders, templates } from "@/db/schema"
@@ -6,41 +6,47 @@ import { eq, and } from "drizzle-orm"
 import { nanoid } from "nanoid"
 import { initiateStkPush, normalizePhone } from "@/lib/mpesa"
 
-async function getExchangeRate(): Promise<number> {
-  const appUrl = process.env.NEXT_PUBLIC_APP_URL
-  if (!appUrl) throw new Error("Missing NEXT_PUBLIC_APP_URL")
-  const res = await fetch(`${appUrl}/api/exchange-rate`, { cache: "no-store" })
-  if (!res.ok) throw new Error(`Exchange rate API returned ${res.status}`)
-  const data = await res.json()
-  if (!data.rate) throw new Error("Exchange rate API returned no rate")
-  return data.rate as number
+/**
+ * Fetches the USD→KES rate.
+ * Tries the app's own endpoint first, then falls back to direct fetch.
+ * Uses req.url.origin so it works on Vercel without NEXT_PUBLIC_APP_URL.
+ */
+async function getExchangeRate(req: NextRequest): Promise<number> {
+  const origin = new URL(req.url).origin
+
+  // Method 1: Call our own API (has caching logic)
+  try {
+    const res = await fetch(`${origin}/api/exchange-rate`, {
+      cache: "no-store",
+      signal: AbortSignal.timeout(5000),
+    })
+    if (res.ok) {
+      const data = await res.json()
+      if (data.rate) return data.rate as number
+    }
+  } catch (err) {
+    console.warn("[EXCHANGE] Self-fetch failed:", err)
+  }
+
+  // Method 2: Direct fallback to exchangerate-api.com
+  try {
+    const res = await fetch("https://api.exchangerate-api.com/v4/latest/USD", {
+      cache: "no-store",
+      signal: AbortSignal.timeout(5000),
+    })
+    if (res.ok) {
+      const data = await res.json()
+      if (data.rates?.KES) return data.rates.KES as number
+    }
+  } catch (err) {
+    console.warn("[EXCHANGE] Direct fetch failed:", err)
+  }
+
+  throw new Error("Exchange rate unavailable. Please try again shortly.")
 }
 
 export async function POST(req: NextRequest) {
   try {
-    // ── DIAGNOSTIC: Check all env vars first ───────────────────────
-    const requiredEnvVars = [
-      "DATABASE_URL",
-      "NEXT_PUBLIC_APP_URL",
-      "MPESA_CONSUMER_KEY",
-      "MPESA_CONSUMER_SECRET",
-      "MPESA_SHORTCODE",
-      "MPESA_PASSKEY",
-      "MPESA_CALLBACK_URL",
-      "MPESA_ENV",
-    ]
-    const missing = requiredEnvVars.filter((k) => !process.env[k])
-    if (missing.length > 0) {
-      return NextResponse.json(
-        {
-          message: "Server misconfiguration: missing environment variables",
-          missing,
-          hint: "Go to Vercel Dashboard → Project Settings → Environment Variables. Ensure these are set for your current deployment environment (Production / Preview).",
-        },
-        { status: 500 }
-      )
-    }
-
     const body = await req.json()
     const { email, phone, templateId, checkoutSessionId } = body ?? {}
 
@@ -72,7 +78,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ message: "Template not found" }, { status: 404 })
     }
 
-    // ── Resolve effective KES amount ───────────────────────────────
+    // ── Resolve KES amount (convert from USD if needed) ──────────────
     let amountKes = Number(template.priceKes)
     let wasConverted = false
     let exchangeRate: number | undefined
@@ -80,7 +86,7 @@ export async function POST(req: NextRequest) {
     if (!amountKes || amountKes <= 0) {
       const usd = Number(template.priceUsd)
       if (usd > 0) {
-        exchangeRate = await getExchangeRate()
+        exchangeRate = await getExchangeRate(req)
         amountKes = Math.round(usd * exchangeRate)
         wasConverted = true
       }
@@ -157,7 +163,7 @@ export async function POST(req: NextRequest) {
   } catch (err: any) {
     console.error("[MPESA CHECKOUT ERROR]", err)
     return NextResponse.json(
-      { message: err.message || "Failed to initiate payment", stack: err.stack },
+      { message: err.message || "Failed to initiate payment" },
       { status: 500 }
     )
   }
