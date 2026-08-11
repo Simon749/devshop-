@@ -1,24 +1,46 @@
-// app/api/checkout/mpesa/route.ts
+// app/api/checkout/mpesa/route.ts — DIAGNOSTIC VERSION
 import { NextRequest, NextResponse } from "next/server"
 import { db } from "@/db"
 import { orders, templates } from "@/db/schema"
-import { eq } from "drizzle-orm"
+import { eq, and } from "drizzle-orm"
 import { nanoid } from "nanoid"
 import { initiateStkPush, normalizePhone } from "@/lib/mpesa"
-import { getEffectivePrice } from "@/lib/prices"
 
 async function getExchangeRate(): Promise<number> {
-  // Reuse your existing endpoint or fetch directly
-  const res = await fetch(`${process.env.NEXT_PUBLIC_APP_URL}/api/exchange-rate`, {
-    cache: "no-store",
-  })
-  if (!res.ok) throw new Error("Failed to fetch exchange rate")
+  const appUrl = process.env.NEXT_PUBLIC_APP_URL
+  if (!appUrl) throw new Error("Missing NEXT_PUBLIC_APP_URL")
+  const res = await fetch(`${appUrl}/api/exchange-rate`, { cache: "no-store" })
+  if (!res.ok) throw new Error(`Exchange rate API returned ${res.status}`)
   const data = await res.json()
+  if (!data.rate) throw new Error("Exchange rate API returned no rate")
   return data.rate as number
 }
 
 export async function POST(req: NextRequest) {
   try {
+    // ── DIAGNOSTIC: Check all env vars first ───────────────────────
+    const requiredEnvVars = [
+      "DATABASE_URL",
+      "NEXT_PUBLIC_APP_URL",
+      "MPESA_CONSUMER_KEY",
+      "MPESA_CONSUMER_SECRET",
+      "MPESA_SHORTCODE",
+      "MPESA_PASSKEY",
+      "MPESA_CALLBACK_URL",
+      "MPESA_ENV",
+    ]
+    const missing = requiredEnvVars.filter((k) => !process.env[k])
+    if (missing.length > 0) {
+      return NextResponse.json(
+        {
+          message: "Server misconfiguration: missing environment variables",
+          missing,
+          hint: "Go to Vercel Dashboard → Project Settings → Environment Variables. Ensure these are set for your current deployment environment (Production / Preview).",
+        },
+        { status: 500 }
+      )
+    }
+
     const body = await req.json()
     const { email, phone, templateId, checkoutSessionId } = body ?? {}
 
@@ -43,20 +65,30 @@ export async function POST(req: NextRequest) {
     const [template] = await db
       .select()
       .from(templates)
-      .where(eq(templates.id, templateId))
+      .where(and(eq(templates.id, templateId), eq(templates.isPublished, true)))
       .limit(1)
 
-    if (!template || !template.isPublished) {
+    if (!template) {
       return NextResponse.json({ message: "Template not found" }, { status: 404 })
     }
 
-    // ── Get effective KES price (convert from USD if needed) ────────
-    const rate = await getExchangeRate()
-    const { amount: amountKes, wasConverted } = getEffectivePrice(template, "KES", rate)
+    // ── Resolve effective KES amount ───────────────────────────────
+    let amountKes = Number(template.priceKes)
+    let wasConverted = false
+    let exchangeRate: number | undefined
 
-    if (amountKes <= 0) {
+    if (!amountKes || amountKes <= 0) {
+      const usd = Number(template.priceUsd)
+      if (usd > 0) {
+        exchangeRate = await getExchangeRate()
+        amountKes = Math.round(usd * exchangeRate)
+        wasConverted = true
+      }
+    }
+
+    if (!amountKes || amountKes <= 0) {
       return NextResponse.json(
-        { message: "Template has no valid price. Cannot checkout for free via M-Pesa." },
+        { message: "Template has no valid price" },
         { status: 400 }
       )
     }
@@ -80,7 +112,6 @@ export async function POST(req: NextRequest) {
       }
     }
 
-    // Store the *converted* amount so the ledger is accurate
     const [order] = await db
       .insert(orders)
       .values({
@@ -107,9 +138,8 @@ export async function POST(req: NextRequest) {
         .set({ paymentStatus: "failed" })
         .where(eq(orders.id, order.id))
 
-      console.error("[M-PESA STK FAILED]", stkErr)
       return NextResponse.json(
-        { message: stkErr.message || "Failed to initiate M-Pesa payment" },
+        { message: stkErr.message || "M-Pesa initiation failed" },
         { status: 502 }
       )
     }
@@ -122,12 +152,12 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({
       checkoutRequestId: stkResponse.checkoutRequestId,
       message: "Check your phone for the M-Pesa prompt",
-      ...(wasConverted && { convertedFrom: "USD", exchangeRate: rate }),
+      ...(wasConverted && { convertedFrom: "USD", exchangeRate }),
     })
   } catch (err: any) {
     console.error("[MPESA CHECKOUT ERROR]", err)
     return NextResponse.json(
-      { message: "Failed to initiate payment" },
+      { message: err.message || "Failed to initiate payment", stack: err.stack },
       { status: 500 }
     )
   }
