@@ -1,133 +1,83 @@
-import Link from "next/link"
-import { GitBranch, X, Mail, ExternalLink } from "lucide-react"
+import Link from "next/link";
 
-const footerLinks = {
-  Templates: [
-    { label: "SaaS Templates", href: "/?category=saas" },
-    { label: "Landing Pages", href: "/?category=landing" },
-    { label: "Dashboards", href: "/?category=dashboard" },
-    { label: "E-Commerce", href: "/?category=ecommerce" },
-    { label: "Portfolio", href: "/?category=portfolio" },
-  ],
-  Resources: [
-    { label: "Live Previews", href: "/#templates" },
-    { label: "Extended License", href: "/license" },
-    { label: "Recover Download", href: "/recover" },
-    { label: "Terms of Service", href: "/terms" },
-    { label: "Privacy Policy", href: "/privacy" },
-  ],
-  Support: [
-    { label: "Email Support", href: "mailto:hello@zyntric.dev" },
-    { label: "Twitter / X", href: "https://twitter.com", external: true },
-    { label: "GitHub", href: "https://github.com", external: true },
-  ],
-}
+export default function Footer() {
+  const currentYear = new Date().getFullYear();
 
-export function Footer() {
   return (
-    <footer className="border-t border-devcraft-border bg-devcraft-bg mt-24">
-      <div className="max-w-7xl mx-auto px-6 py-16">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-12 mb-16">
-
-          {/* Brand column */}
-          <div className="lg:col-span-2">
-            <Link href="/" className="flex items-center gap-2.5 mb-6 w-fit group">
-              {/* Logo coin */}
-              <div
-                className="w-9 h-9 rounded-full shrink-0 border border-[rgba(200,168,75,0.25)] bg-devcraft-surface"
-                style={{
-                  backgroundImage: "url('/logo.png')",
-                  backgroundSize: "cover",
-                  backgroundPosition: "center",
-                }}
-                role="img"
-                aria-label="Zyntric Systems logo"
-              />
-              <div className="flex flex-col leading-none gap-[2px]">
-                <span className="font-mono text-[13px] font-medium tracking-[0.1em] uppercase text-white">
-                  Zyntric
-                </span>
-                <span className="font-mono text-[8px] tracking-[0.18em] uppercase text-[#c8a84b]">
-                  Systems
-                </span>
-              </div>
-            </Link>
-
-            <p className="font-mono text-[11px] leading-[1.9] tracking-[0.01em] text-devcraft-slate-light max-w-xs mb-8 font-light">
-              Production-ready Next.js and React templates for developers who
-              ship fast. Extended license — use in unlimited client projects.
+    <footer className="border-t bg-background">
+      <div className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
+        <div className="grid grid-cols-1 gap-8 md:grid-cols-3">
+          
+          {/* Brand Column */}
+          <div className="space-y-4">
+            <h3 className="text-lg font-bold tracking-tight">Zyntric Systems</h3>
+            <p className="text-sm text-muted-foreground max-w-xs">
+              Premium digital assets and tools for developers and creators. Built with precision, delivered securely.
             </p>
-
-            <div className="flex items-center gap-2">
-              {[
-                { icon: X,         href: "https://twitter.com",         label: "Twitter" },
-                { icon: GitBranch, href: "https://github.com",          label: "GitHub" },
-                { icon: Mail,      href: "mailto:hello@zyntric.dev",    label: "Email" },
-              ].map(({ icon: Icon, href, label }) => (
-                <a
-                  key={label}
-                  href={href}
-                  target={href.startsWith("http") ? "_blank" : undefined}
-                  rel={href.startsWith("http") ? "noopener noreferrer" : undefined}
-                  aria-label={label}
-                  className="w-8 h-8 rounded-[4px] bg-devcraft-surface border border-devcraft-border
-                             flex items-center justify-center
-                             text-devcraft-slate hover:text-white hover:border-devcraft-border-hover
-                             transition-all duration-200"
-                >
-                  <Icon className="w-3.5 h-3.5" />
-                </a>
-              ))}
-            </div>
+            <a 
+              href="mailto:hello@zyntric.dev" 
+              className="text-sm text-muted-foreground hover:text-foreground transition-colors"
+            >
+              hello@zyntric.dev
+            </a>
           </div>
 
-          {/* Link columns */}
-          {Object.entries(footerLinks).map(([title, links]) => (
-            <div key={title}>
-              <h3 className="font-mono text-[9px] font-medium uppercase tracking-[0.18em] text-devcraft-slate mb-5">
-                {title}
-              </h3>
-              <ul className="space-y-3">
-                {links.map((link) => (
-                  <li key={link.label}>
-                    <Link
-                      href={link.href}
-                      target={"external" in link && link.external ? "_blank" : undefined}
-                      rel={"external" in link && link.external ? "noopener noreferrer" : undefined}
-                      className="flex items-center gap-1.5 font-mono text-[11px] tracking-[0.02em]
-                                 text-devcraft-slate-light hover:text-white
-                                 transition-colors duration-200 w-fit"
-                    >
-                      {link.label}
-                      {"external" in link && link.external && (
-                        <ExternalLink className="w-3 h-3 opacity-40" />
-                      )}
-                    </Link>
-                  </li>
-                ))}
-              </ul>
+          {/* Links Column */}
+          <div className="space-y-4">
+            <h4 className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">
+              Legal & Policies
+            </h4>
+            <ul className="space-y-3 text-sm">
+              <li>
+                <Link href="/terms" className="text-muted-foreground hover:text-foreground transition-colors">
+                  Terms of Service
+                </Link>
+              </li>
+              <li>
+                <Link href="/privacy" className="text-muted-foreground hover:text-foreground transition-colors">
+                  Privacy Policy
+                </Link>
+              </li>
+              <li>
+                <Link href="/license" className="text-muted-foreground hover:text-foreground transition-colors">
+                  Extended License
+                </Link>
+              </li>
+            </ul>
+          </div>
+
+          {/* Social Column */}
+          <div className="space-y-4">
+            <h4 className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">
+              Connect
+            </h4>
+            <div className="flex space-x-4">
+              <a 
+                href="https://github.com/Simon749" 
+                target="_blank" 
+                rel="noopener noreferrer"
+                className="text-muted-foreground hover:text-foreground transition-colors"
+                aria-label="GitHub"
+              >
+                <svg className="h-5 w-5" fill="currentColor" viewBox="0 0 24 24"><path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/></svg>
+              </a>
+              <a 
+                href="https://x.com/SimonMw749" 
+                target="_blank" 
+                rel="noopener noreferrer"
+                className="text-muted-foreground hover:text-foreground transition-colors"
+                aria-label="X (Twitter)"
+              >
+                <svg className="h-5 w-5" fill="currentColor" viewBox="0 0 24 24"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>
+              </a>
             </div>
-          ))}
+          </div>
         </div>
 
-        {/* Bottom bar */}
-        <div className="flex flex-col sm:flex-row items-center justify-between gap-4 pt-8 border-t border-devcraft-border">
-          <p className="font-mono text-[10px] uppercase tracking-[0.08em] text-devcraft-slate-dark">
-            © {new Date().getFullYear()} Zyntric Systems. All rights reserved.
-          </p>
-
-          <div className="flex items-center gap-4 font-mono text-[10px] uppercase tracking-[0.08em] text-devcraft-slate-dark">
-            <span className="flex items-center gap-1.5">
-              <span className="w-1.5 h-1.5 rounded-full bg-devcraft-emerald animate-pulse" />
-              M-Pesa &amp; Card
-            </span>
-            <span className="text-devcraft-border">·</span>
-            <span>Extended License</span>
-            <span className="text-devcraft-border">·</span>
-            <span>Instant Download</span>
-          </div>
+        <div className="mt-8 border-t pt-8 text-center text-sm text-muted-foreground">
+          &copy; {currentYear} Zyntric Systems. All rights reserved.
         </div>
       </div>
     </footer>
-  )
+  );
 }

@@ -35,6 +35,11 @@ export const templates = pgTable("templates", {
   licenseType: licenseEnum("license_type").notNull().default("extended"),
   livePreviewUrl: text("live_preview_url"),
   zipFileKey: text("zip_file_key"),           // Uploadthing private key — NEVER sent to client
+  // Add these inside the pgTable("templates", { ... }) definition:
+  fileFormat: varchar("file_format", { length: 50 }).notNull().default(".zip"), // e.g., ".zip", ".fig"
+  fileSizeMb: numeric("file_size_mb", { precision: 6, scale: 2 }).notNull().default("0.00"), // e.g., "24.50"
+  version: varchar("version", { length: 20 }).notNull().default("1.0.0"), // e.g., "1.0.0"
+  updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(), // For "Last Updated"
   screenshots: text("screenshots").array().notNull().default([]),
   isPublished: boolean("is_published").notNull().default(false),
   downloadCount: integer("download_count").notNull().default(0),

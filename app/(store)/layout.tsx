@@ -1,5 +1,5 @@
 import { Navbar } from "@/components/common/Navbar";
-import { Footer } from "@/components/store/Footer";
+import  Footer  from "@/components/store/Footer";
 
 export default function StoreLayout({ children }: { children: React.ReactNode }) {
   return (

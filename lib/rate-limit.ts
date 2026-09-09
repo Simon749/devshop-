@@ -1,27 +1,19 @@
 // lib/rate-limit.ts
-// In-memory fallback (fine for a single Vercel instance / low traffic MVP).
-// Swap for Upstash Redis (@upstash/ratelimit) once traffic justifies it —
-// this version resets on cold start and won't work across multiple instances.
+import { Ratelimit } from "@upstash/ratelimit";
+import { Redis } from "@upstash/redis";
 
-const hits = new Map<string, { count: number; resetAt: number }>()
+const redis = new Redis({
+  url: process.env.UPSTASH_REDIS_REST_URL!,
+  token: process.env.UPSTASH_REDIS_REST_TOKEN!,
+});
 
-export async function checkRateLimit(
-  key: string,
-  maxAttempts: number,
-  windowSeconds: number
-): Promise<{ allowed: boolean }> {
-  const now = Date.now()
-  const entry = hits.get(key)
+// 5 requests per minute per IP. Adjust as needed.
+export const rateLimit = new Ratelimit({
+  redis,
+  limiter: Ratelimit.slidingWindow(5, "1 m"),
+});
 
-  if (!entry || entry.resetAt < now) {
-    hits.set(key, { count: 1, resetAt: now + windowSeconds * 1000 })
-    return { allowed: true }
-  }
-
-  if (entry.count >= maxAttempts) {
-    return { allowed: false }
-  }
-
-  entry.count++
-  return { allowed: true }
+export async function checkRateLimit(ip: string) {
+  const { success, limit, reset, remaining } = await rateLimit.limit(`ratelimit_${ip}`);
+  return { success, limit, reset, remaining };
 }

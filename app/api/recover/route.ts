@@ -4,8 +4,17 @@ import { orders, templates } from "@/db/schema"
 import { eq, and, desc, isNull } from "drizzle-orm"
 import { regenerateToken } from "@/lib/tokens"
 import { sendRecoverEmail } from "@/services/emails"
+import { checkRateLimit } from "@/lib/rate-limit";
+import { headers } from "next/headers";
 
 export async function POST(req: NextRequest) {
+  const headersList = await headers();
+  const ip = headersList.get("x-forwarded-for") ?? "unknown";
+
+  const { success } = await checkRateLimit(ip);
+  if (!success) {
+    return new Response("Too Many Requests", { status: 429 });
+  }
   try {
     const { email } = await req.json()
 

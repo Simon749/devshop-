@@ -5,6 +5,8 @@ import { orders, templates } from "@/db/schema"
 import { eq, and } from "drizzle-orm"
 import { nanoid } from "nanoid"
 import { initiateStkPush, normalizePhone } from "@/lib/mpesa"
+import { checkRateLimit } from "@/lib/rate-limit";
+import { headers } from "next/headers";
 
 /**
  * Fetches the USD→KES rate.
@@ -13,6 +15,13 @@ import { initiateStkPush, normalizePhone } from "@/lib/mpesa"
  */
 async function getExchangeRate(req: NextRequest): Promise<number> {
   const origin = new URL(req.url).origin
+  const headersList = await headers();
+  const ip = headersList.get("x-forwarded-for") ?? "unknown";
+  
+  const { success } = await checkRateLimit(ip);
+  if (!success) {
+    return new Response("Too Many Requests", { status: 429 });
+  }
 
   // Method 1: Call our own API (has caching logic)
   try {
@@ -150,9 +159,13 @@ export async function POST(req: NextRequest) {
       )
     }
 
+    // FIX (Phase 0): the webhook and status route look up orders by
+    // gatewayRequestId (see db/schema.ts — "M-Pesa CheckoutRequestID").
+    // Previously this wrote gatewayRef, so the webhook could never find
+    // the order and M-Pesa payments never completed.
     await db
       .update(orders)
-      .set({ gatewayRef: stkResponse.checkoutRequestId })
+      .set({ gatewayRequestId: stkResponse.checkoutRequestId })
       .where(eq(orders.id, order.id))
 
     return NextResponse.json({
