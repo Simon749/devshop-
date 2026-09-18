@@ -4,13 +4,12 @@ import { useState, useEffect } from "react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { motion, AnimatePresence } from "framer-motion"
-import { Menu, X, ExternalLink, ArrowRight, ShoppingCart } from "lucide-react"
+import { Menu, X, Search, ShoppingCart } from "lucide-react"
 import { useCart } from "@/lib/cart-store"
 
 const navLinks = [
   { label: "Templates", href: "/templates" },
-  { label: "Pricing", href: "/#pricing" },
-  { label: "Preview", href: "https://luxury-website-course-c-te-royale.vercel.app/", external: true },
+  { label: "License", href: "/license" },
 ]
 
 export function Navbar() {
@@ -41,6 +40,7 @@ export function Navbar() {
           scrolled
             ? "bg-devcraft-bg/90 backdrop-blur-xl border-b border-devcraft-border shadow-[0_1px_0_0_rgba(255,255,255,0.03)]"
             : "bg-transparent"
+          scrolled ? "glass shadow-[0_1px_0_0_rgba(255,255,255,0.03)]" : "bg-transparent"
         }`}
       >
         <div className="max-w-7xl mx-auto px-6">
@@ -48,7 +48,7 @@ export function Navbar() {
 
             {/* Logo */}
             <Link href="/" className="flex items-center gap-2.5 group">
-              <div className="relative w-8 h-8 rounded-full overflow-hidden border border-[rgba(200,168,75,0.25)] shrink-0">
+              <div className="relative w-8 h-8 rounded-full overflow-hidden border border-devcraft-violet/25 shrink-0">
                 <img
                   src="/logo.png"
                   alt="Zyntric Systems"
@@ -56,10 +56,10 @@ export function Navbar() {
                 />
               </div>
               <div className="flex flex-col leading-none gap-[2px]">
-                <span className="font-mono text-[13px] font-medium tracking-[0.1em] uppercase text-white">
+                <span className="font-mono text-[13px] font-medium tracking-[0.1em] uppercase text-devcraft-foreground">
                   Zyntric
                 </span>
-                <span className="font-mono text-[8px] tracking-[0.18em] uppercase text-[#c8a84b]">
+                 <span className="font-mono text-[8px] tracking-[0.18em] uppercase text-devcraft-violet-glow">
                   Systems
                 </span>
               </div>
@@ -73,11 +73,10 @@ export function Navbar() {
                   href={link.href}
                   target={link.external ? "_blank" : undefined}
                   rel={link.external ? "noopener noreferrer" : undefined}
-                  className="flex items-center gap-1.5 px-4 py-2 rounded-lg
-                             font-mono text-[11px] uppercase tracking-[0.08em]
-                             text-devcraft-slate-light hover:text-white hover:bg-devcraft-surface/60
-                             transition-all duration-200"
-                >
+                 className="px-4 py-2 rounded-lg font-mono text-[11px] uppercase tracking-[0.08em]
+                             text-devcraft-slate-light hover:text-devcraft-foreground hover:bg-devcraft-surface/60
+                              transition-all duration-200"
+                 >
                   {link.label}
                   {link.external && <ExternalLink className="w-3 h-3 opacity-50" />}
                 </Link>
@@ -85,7 +84,17 @@ export function Navbar() {
             </nav>
 
             {/* Desktop actions */}
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-2">
++              <Link
++                href="/templates"
++                aria-label="Search templates"
++                className="hidden sm:flex w-9 h-9 rounded-[4px] border border-devcraft-border
++                           bg-devcraft-surface/50 items-center justify-center
++                           text-devcraft-slate-light hover:text-devcraft-foreground hover:border-devcraft-border-hover
++                           transition-all duration-200"
++              >
++                <Search className="w-3.5 h-3.5" />
++              </Link>
               {/* Cart */}
               <button
                 onClick={toggleCart}
@@ -95,11 +104,17 @@ export function Navbar() {
                            text-devcraft-slate-light hover:text-white
                            hover:border-devcraft-border-hover transition-all duration-200 relative"
               >
+                aria-label="Open cart"
+                className="flex w-9 h-9 rounded-[4px] border border-devcraft-border
+                           bg-devcraft-surface/50 items-center justify-center relative
+                           text-devcraft-slate-light hover:text-devcraft-foreground hover:border-devcraft-border-hover
+                           transition-all duration-200"
+               >
                 <ShoppingCart className="w-3.5 h-3.5" />
                 <span className="hidden lg:inline">Cart</span>
                 {itemCount > 0 && (
                   <span className="absolute -top-1.5 -right-1.5 w-4 h-4 rounded-full bg-devcraft-violet
-                                   text-white text-[9px] font-bold flex items-center justify-center">
+                                   text-devcraft-bg text-[9px] font-bold flex items-center justify-center">
                     {itemCount}
                   </span>
                 )}
@@ -122,8 +137,8 @@ export function Navbar() {
                 onClick={() => setIsOpen(!isOpen)}
                 className="md:hidden relative w-9 h-9 rounded-[4px] border border-devcraft-border
                            bg-devcraft-surface/50 flex items-center justify-center
-                           text-devcraft-slate-light hover:text-white hover:border-devcraft-border-hover
-                           transition-all duration-200"
+                           text-devcraft-slate-light hover:text-devcraft-foreground hover:border-devcraft-border-hover
+                            transition-all duration-200"
                 aria-label={isOpen ? "Close menu" : "Open menu"}
                 aria-expanded={isOpen}
               >
@@ -136,6 +151,9 @@ export function Navbar() {
                       exit={{ rotate: 90, opacity: 0 }}
                       transition={{ duration: 0.15 }}
                     >
+
+                    <motion.div key="close" initial={{ rotate: -90, opacity: 0 }} animate={{ rotate: 0, opacity: 1 }} exit={{ rotate: 90, opacity: 0 }} transition={{ duration: 0.15 }}>
+                      
                       <X className="w-4 h-4" />
                     </motion.div>
                   ) : (
@@ -146,6 +164,7 @@ export function Navbar() {
                       exit={{ rotate: -90, opacity: 0 }}
                       transition={{ duration: 0.15 }}
                     >
+                      <motion.div key="menu" initial={{ rotate: 90, opacity: 0 }} animate={{ rotate: 0, opacity: 1 }} exit={{ rotate: -90, opacity: 0 }} transition={{ duration: 0.15 }}>
                       <Menu className="w-4 h-4" />
                     </motion.div>
                   )}
@@ -182,15 +201,15 @@ export function Navbar() {
             >
               <div className="flex items-center justify-between px-5 h-16 border-b border-devcraft-border">
                 <Link href="/" onClick={() => setIsOpen(false)} className="flex items-center gap-2.5">
-                  <div className="relative w-7 h-7 rounded-full overflow-hidden border border-[rgba(200,168,75,0.25)] shrink-0">
+                   <div className="relative w-7 h-7 rounded-full overflow-hidden border border-devcraft-violet/25 shrink-0">
                     <img src="/images/logo.png" alt="Zyntric" className="w-full h-full object-cover" />
                   </div>
                   <div className="flex flex-col leading-none gap-[2px]">
-                    <span className="font-mono text-[12px] font-medium tracking-[0.1em] uppercase text-white">Zyntric</span>
-                    <span className="font-mono text-[7px] tracking-[0.18em] uppercase text-[#c8a84b]">Systems</span>
+                    <span className="font-mono text-[12px] font-medium tracking-[0.1em] uppercase text-devcraft-foreground">Zyntric</span>
+                     <span className="font-mono text-[7px] tracking-[0.18em] uppercase text-devcraft-violet-glow">Systems</span>
                   </div>
                 </Link>
-                <button onClick={() => setIsOpen(false)} className="w-7 h-7 rounded-[4px] flex items-center justify-center text-devcraft-slate-light hover:text-white hover:bg-devcraft-surface transition-all">
+                <button onClick={() => setIsOpen(false)} className="w-7 h-7 rounded-[4px] flex items-center justify-center text-devcraft-slate-light hover:text-devcraft-foreground hover:bg-devcraft-surface transition-all">
                   <X className="w-4 h-4" />
                 </button>
               </div>
@@ -203,28 +222,27 @@ export function Navbar() {
                       target={link.external ? "_blank" : undefined}
                       rel={link.external ? "noopener noreferrer" : undefined}
                       onClick={() => setIsOpen(false)}
-                      className="flex items-center justify-between px-4 py-3.5 rounded-[4px] font-mono text-[11px] uppercase tracking-[0.08em] text-devcraft-slate-light hover:text-white hover:bg-devcraft-surface border border-transparent hover:border-devcraft-border transition-all"
-                    >
+                      className="flex items-center px-4 py-3.5 rounded-[4px] font-mono text-[11px] uppercase tracking-[0.08em] text-devcraft-slate-light hover:text-devcraft-foreground hover:bg-devcraft-surface border border-transparent hover:border-devcraft-border transition-all"
+                     >
                       {link.label}
                       {link.external && <ExternalLink className="w-3 h-3 opacity-50" />}
                     </Link>
                   </motion.div>
                 ))}
 
-                {/* Mobile Cart Link */}
+                {/* Mobile Cart */}
                 <button
                   onClick={() => {
                     setIsOpen(false)
                     toggleCart()
                   }}
-                  className="flex items-center justify-between px-4 py-3.5 rounded-[4px] font-mono text-[11px] uppercase tracking-[0.08em] text-devcraft-slate-light hover:text-white hover:bg-devcraft-surface border border-transparent hover:border-devcraft-border transition-all w-full"
-                >
+                className="flex items-center justify-between px-4 py-3.5 rounded-[4px] font-mono text-[11px] uppercase tracking-[0.08em] text-devcraft-slate-light hover:text-devcraft-foreground hover:bg-devcraft-surface border border-transparent hover:border-devcraft-border transition-all w-full">
                   <span className="flex items-center gap-2">
                     <ShoppingCart className="w-3.5 h-3.5" />
                     Cart
                   </span>
                   {itemCount > 0 && (
-                    <span className="px-1.5 py-0.5 rounded-full bg-devcraft-violet text-white text-[9px] font-bold">
+                     <span className="px-1.5 py-0.5 rounded-full bg-devcraft-violet text-devcraft-bg text-[9px] font-bold">
                       {itemCount}
                     </span>
                   )}
