@@ -1,9 +1,8 @@
 "use client"
 
-import { motion } from "framer-motion"
 import { Category, PriceFilter } from "@/types"
 import { cn } from "@/lib/utils"
-import { Filter, Crown, Gift, LayoutGrid } from "lucide-react"
+
 
 interface FilterHeaderProps {
   activeCategory: Category
@@ -22,11 +21,11 @@ const categories: { value: Category; label: string }[] = [
   { value: "landing", label: "Landing" },
 ]
 
-const priceFilters: { value: PriceFilter; label: string; icon: React.ReactNode }[] = [
-  { value: "all", label: "All Templates", icon: <LayoutGrid className="w-3.5 h-3.5" /> },
-  { value: "premium", label: "Premium Only", icon: <Crown className="w-3.5 h-3.5" /> },
-  { value: "free", label: "Free Only", icon: <Gift className="w-3.5 h-3.5" /> },
-]
+const priceFilters: { value: PriceFilter; label: string }[] = [
+ { value: "all", label: "All" },
+ { value: "free", label: "Free" },
+ { value: "premium", label: "Premium" },
+ ]
 
 export function FilterHeader({
   activeCategory,
@@ -38,17 +37,46 @@ export function FilterHeader({
   return (
     <div className="space-y-6">
       {/* Category Tabs */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div className="flex items-center gap-1.5 bg-devcraft-surface/80 border border-devcraft-border rounded-xl p-1.5 overflow-x-auto">
-          {categories.map((cat) => (
+      
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 pb-6 border-b border-devcraft-border">
+      {/* Category chips — plain, individually bordered, no boxed container */}
+     <div className="flex items-center gap-2 overflow-x-auto no-scrollbar">
+        {categories.map((cat) => (
+          <button
+            key={cat.value}
+            onClick={() => onCategoryChange(cat.value)}
+            className={cn(
+              "px-3.5 py-1.5 rounded-full text-[13px] font-medium whitespace-nowrap border transition-colors duration-150 shrink-0",
+              activeCategory === cat.value
+                ? "border-devcraft-violet/40 bg-devcraft-violet/[0.10] text-devcraft-violet-glow"
+                : "border-devcraft-border text-devcraft-slate-light hover:border-devcraft-border-hover hover:text-devcraft-foreground"
+            )}
+          >
+            {cat.label}
+          </button>
+        ))}
+     </div>
+
+     {/* Price filter + result count */}
+      <div className="flex items-center gap-4 shrink-0">
+        <div className="flex items-center gap-1.5">
+          {priceFilters.map((filter) => (
+             <button
             <button
               key={cat.value}
               onClick={() => onCategoryChange(cat.value)}
+              key={filter.value}
+             onClick={() => onPriceFilterChange(filter.value)}
               className={cn(
                 "relative px-4 py-2 rounded-lg text-sm font-medium whitespace-nowrap transition-all duration-300",
                 activeCategory === cat.value
                   ? "text-white"
                   : "text-slate-400 hover:text-slate-200"
+                "px-3 py-1 rounded-full text-xs font-mono uppercase tracking-[0.06em] transition-colors duration-150",
+              activePriceFilter === filter.value
+                ? "text-devcraft-violet-glow"
+                 : "text-devcraft-slate hover:text-devcraft-slate-light"
+               )}
               )}
             >
               {activeCategory === cat.value && (
@@ -59,6 +87,7 @@ export function FilterHeader({
                 />
               )}
               <span className="relative z-10">{cat.label}</span>
+              {filter.label}
             </button>
           ))}
         </div>
