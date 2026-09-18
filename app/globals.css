@@ -209,6 +209,15 @@
     border-color: var(--color-border);
   }
 
+   /* Hides scrollbar on horizontally-scrolling chip rows (category filters, mobile) */
+ .no-scrollbar {
+   -ms-overflow-style: none;
+   scrollbar-width: none;
+ }
+.no-scrollbar::-webkit-scrollbar {
+   display: none;
+ }
+
   body {
     background-color: var(--color-background);
     color: var(--color-foreground);
