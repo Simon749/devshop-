@@ -1,12 +1,11 @@
 "use client"
 
 import { useState, useMemo } from "react"
-import { motion } from "framer-motion"
-import { HeroSection } from "./HeroSection"
 import { FilterHeader } from "./FilterHeader"
 import { ProductGrid } from "./ProductGrid"
 import { Template, Category, PriceFilter } from "@/types"
-import { Code2, Globe, Shield, ArrowRight } from "lucide-react"
+import { Search, X } from "lucide-react"
+
 
 interface HomePageClientProps {
   templates: Template[]
@@ -16,6 +15,7 @@ interface HomePageClientProps {
 export function HomePageClient({ templates, isKenyan }: HomePageClientProps) {
   const [activeCategory, setActiveCategory] = useState<Category>("all")
   const [activePriceFilter, setActivePriceFilter] = useState<PriceFilter>("all")
+  const [searchQuery, setSearchQuery] = useState("")
 
   const filteredTemplates = useMemo(() => {
     return templates.filter((template) => {
@@ -24,15 +24,38 @@ export function HomePageClient({ templates, isKenyan }: HomePageClientProps) {
         activePriceFilter === "all" ||
         (activePriceFilter === "premium" && !template.isFree) ||
         (activePriceFilter === "free" && template.isFree)
-      return categoryMatch && priceMatch
-    })
-  }, [templates, activeCategory, activePriceFilter])
+      const searchMatch =
+        searchQuery === "" ||
+        template.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+       (template.description || "").toLowerCase().includes(searchQuery.toLowerCase()) ||
+        template.techStack.some((tech) => tech.toLowerCase().includes(searchQuery.toLowerCase()))
+      return categoryMatch && priceMatch && searchMatch
+     })
+  }, [templates, activeCategory, activePriceFilter, searchQuery])
 
   return (
     <div className="min-h-screen bg-devcraft-bg">
 
       {/* Hero */}
-      <HeroSection />
+
+       {/* Compact intro — replaces the old hero + stats bar (D2) */}
+      <section className="border-b border-devcraft-border">
+        <div className="max-w-7xl mx-auto px-6 pt-14 pb-10 md:pt-16 md:pb-12">
+          <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-6">
+            <div>
+              <h1 className="font-display text-3xl md:text-[40px] leading-[1.05] tracking-tight text-devcraft-foreground font-normal mb-2">
+                Templates
+              </h1>
+              <p className="text-sm text-devcraft-slate-light max-w-md">
+                Production-ready digital products built to ship.
+                {isKenyan && (
+                  <span className="text-devcraft-emerald-glow ml-2 font-mono text-[11px]">
+                    🇰🇪 Prices shown in KES
+                  </span>
+                )}
+              </p>
+            </div>
+      
 
       {/* Stats Bar */}
       <section className="border-y border-devcraft-border bg-devcraft-surface/30">
@@ -65,6 +88,29 @@ export function HomePageClient({ templates, isKenyan }: HomePageClientProps) {
                 </div>
               </motion.div>
             ))}
+            
+            {/* Search */}
+             <div className="relative w-full md:w-[320px] shrink-0">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-devcraft-slate" />
+              <input
+                type="text"
+                placeholder="Search templates..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="w-full bg-devcraft-surface border border-devcraft-border rounded-[4px]
+                           pl-9 pr-9 py-2.5 text-sm text-devcraft-foreground placeholder-devcraft-slate
+                           focus:outline-none focus:border-devcraft-violet/50 transition-colors duration-200"
+              />
+              {searchQuery && (
+                <button
+                  onClick={() => setSearchQuery("")}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-devcraft-slate hover:text-devcraft-foreground"
+                  aria-label="Clear search"
+                >
+                  <X className="w-3.5 h-3.5" />
+               </button>
+              )}
+            </div>
           </div>
         </div>
       </section>
@@ -187,9 +233,20 @@ export function HomePageClient({ templates, isKenyan }: HomePageClientProps) {
               </div>
             </div>
           </motion.div>
+          <section className="max-w-7xl mx-auto px-6 py-10 md:py-12" id="templates">
+        <FilterHeader
+          activeCategory={activeCategory}
+          activePriceFilter={activePriceFilter}
+          onCategoryChange={setActiveCategory}
+          onPriceFilterChange={setActivePriceFilter}
+          resultCount={filteredTemplates.length}
+        />
+
+        <div className="mt-8">
+          <ProductGrid templates={filteredTemplates} />
+         </div>
         </div>
       </section>
-
     </div>
   )
 }
