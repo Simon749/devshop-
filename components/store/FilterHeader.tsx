@@ -61,7 +61,6 @@ export function FilterHeader({
       <div className="flex items-center gap-4 shrink-0">
         <div className="flex items-center gap-1.5">
           {priceFilters.map((filter) => (
-             <button
             <button
               key={cat.value}
               onClick={() => onCategoryChange(cat.value)}
