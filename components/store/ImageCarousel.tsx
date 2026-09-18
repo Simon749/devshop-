@@ -83,7 +83,7 @@ export function ImageCarousel({ images, alt }: ImageCarouselProps) {
   if (images.length === 0) {
     return (
       <div className="aspect-[4/3] bg-devcraft-surface rounded-xl border border-devcraft-border flex items-center justify-center">
-        <span className="text-slate-500 text-sm">No preview images</span>
+        <span className="text-devcraft-slate text-sm">No preview images</span>
       </div>
     )
   }
