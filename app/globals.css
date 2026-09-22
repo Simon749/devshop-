@@ -6,7 +6,8 @@
 
 /*
  * UNIFIED DESIGN SYSTEM (Tailwind v4)
- * Fonts: Instrument Serif (display/headlines) + DM Mono (body/UI)
+ * Fonts: Instrument Serif (display/headlines) + Geist Sans (body) + DM Mono (labels/metadata)
+ * Palette: obsidian / warm ivory / gold+earth accents — see D1 in ui-redesign-tracker.md
  */
 
 @theme inline {
@@ -64,6 +65,7 @@
   --color-devcraft-card: var(--devcraft-card);
   --color-devcraft-border: var(--devcraft-border);
   --color-devcraft-border-hover: var(--devcraft-border-hover);
+  --color-devcraft-foreground: var(--devcraft-foreground);
   --color-devcraft-violet: var(--devcraft-violet);
   --color-devcraft-violet-glow: var(--devcraft-violet-glow);
   --color-devcraft-emerald: var(--devcraft-emerald);
@@ -71,20 +73,25 @@
   --color-devcraft-slate: var(--devcraft-slate);
   --color-devcraft-slate-light: var(--devcraft-slate-light);
   --color-devcraft-slate-dark: var(--devcraft-slate-dark);
+  --color-devcraft-earth: var(--devcraft-earth);
+  --color-devcraft-bronze: var(--devcraft-bronze);
 
   /* ==========================================
-   * FONT STACK
+   * FONT STACK  (D4 — see ui-redesign-tracker.md)
    * Instrument Serif  → display headlines (font-display)
    * DM Mono           → UI, labels, body copy (font-sans / font-mono)
+   * Geist Sans        → body copy, descriptions (font-sans) — was DM Mono, fixed
+   * DM Mono           → labels, prices, metadata only (font-mono)
+
    * ========================================== */
-  --font-sans: "DM Mono", "ui-monospace", "monospace";
+  --font-sans: "Geist", "Inter", "ui-sans-serif", "system-ui", "sans-serif";
   --font-mono: "DM Mono", "ui-monospace", "monospace";
   --font-display: "Instrument Serif", "Georgia", "serif";
 
-  /* Glow Shadows */
-  --shadow-violet-glow: 0 0 40px -10px rgba(139, 92, 246, 0.4);
-  --shadow-emerald-glow: 0 0 40px -10px rgba(16, 185, 129, 0.4);
-  --shadow-card-hover: 0 0 60px -15px rgba(139, 92, 246, 0.25);
+ /* Glow Shadows — gold/olive, restrained (was violet/emerald) */
+  --shadow-violet-glow: 0 0 40px -10px rgba(194, 154, 91, 0.35);
+  --shadow-emerald-glow: 0 0 40px -10px rgba(98, 99, 77, 0.4);
+  --shadow-card-hover: 0 0 60px -15px rgba(194, 154, 91, 0.2);
 
   /* Animations */
   --animate-fade-in: fadeIn 0.5s ease-out forwards;
@@ -103,8 +110,8 @@
   }
 
   @keyframes glow {
-    0%   { box-shadow: 0 0 20px -5px rgba(139, 92, 246, 0.3); }
-    100% { box-shadow: 0 0 40px -5px rgba(139, 92, 246, 0.6); }
+     0%   { box-shadow: 0 0 20px -5px rgba(194, 154, 91, 0.25); }
+    100% { box-shadow: 0 0 40px -5px rgba(194, 154, 91, 0.45); }
   }
 
   @keyframes dc-ticker {
@@ -152,18 +159,21 @@
   --sidebar-ring: oklch(0.704 0.04 256.788);
 
   /* DevCraft Storefront */
-  --devcraft-bg: #090d16;
-  --devcraft-surface: #0f1623;
-  --devcraft-card: #111827;
-  --devcraft-border: #1e293b;
-  --devcraft-border-hover: #334155;
-  --devcraft-violet: #8b5cf6;
-  --devcraft-violet-glow: #a78bfa;
-  --devcraft-emerald: #10b981;
-  --devcraft-emerald-glow: #34d399;
-  --devcraft-slate: #64748b;
-  --devcraft-slate-light: #94a3b8;
-  --devcraft-slate-dark: #475569;
+  --devcraft-bg: #0a0a08;
+  --devcraft-surface: #11110f;
+  --devcraft-card: #171612;
+  --devcraft-border: rgba(255, 255, 255, 0.08);
+  --devcraft-border-hover: rgba(255, 255, 255, 0.16);
+  --devcraft-foreground: #f3eee4;
+  --devcraft-violet: #c29a5b;        /* gold — primary accent */
+  --devcraft-violet-glow: #d9ba85;   /* lighter gold — hover/highlight text */
+  --devcraft-emerald: #62634d;       /* olive — secondary accent (free/trust states) */
+  --devcraft-emerald-glow: #8b8c6e;  /* lighter olive */
+  --devcraft-slate: #969188;         /* secondary/muted text */
+  --devcraft-slate-light: #b5afa3;   /* lighter muted text */
+  --devcraft-slate-dark: #6b655c;    /* darkest muted / fine print */
+  --devcraft-earth: #9a5c43;         /* clay — tertiary accent */
+  --devcraft-bronze: #80623b;        /* deep bronze — tertiary accent */
 }
 
 /* ==========================================
@@ -207,6 +217,14 @@
 @layer base {
   * {
     border-color: var(--color-border);
+  }
+  /* Shared glass surface — D6: nav, filter bar, cart panel, modal ONLY.
+     Never apply to product cards or as a default section background. */
+  .glass {
+    background-color: rgba(17, 17, 15, 0.72); /* devcraft-surface @ 72% */
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: 1px solid var(--devcraft-border);
   }
 
    /* Hides scrollbar on horizontally-scrolling chip rows (category filters, mobile) */
