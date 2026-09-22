@@ -1,12 +1,13 @@
 "use client"
 
 import { useState, useEffect } from "react"
+import Link from "next/link"
 import { motion, AnimatePresence } from "framer-motion"
-import { Menu, X, ShoppingCart, ArrowRight } from "lucide-react"
+import { Menu, X, ShoppingCart, Search } from "lucide-react"
+import { useCart } from "@/lib/cart-store"
 
 const navLinks = [
   { label: "Templates", href: "/templates" },
-  { label: "Pricing",   href: "/pricing" },
   { label: "License",   href: "/license" },
   { label: "Docs",      href: "/docs" },
 ]
@@ -14,6 +15,8 @@ const navLinks = [
 export function Navbar() {
   const [scrolled, setScrolled] = useState(false)
   const [mobileOpen, setMobileOpen] = useState(false)
+  const { toggleCart, totalItems } = useCart()
+  const itemCount = totalItems()
 
   useEffect(() => {
     const handleScroll = () => setScrolled(window.scrollY > 20)
@@ -31,6 +34,7 @@ export function Navbar() {
           scrolled
             ? "bg-devcraft-bg/90 backdrop-blur-xl border-b border-devcraft-border shadow-[0_1px_0_0_rgba(255,255,255,0.03)]"
             : "bg-transparent"
+          scrolled ? "glass shadow-[0_1px_0_0_rgba(255,255,255,0.03)]" : "bg-transparent"
         }`}
       >
         <div className="max-w-7xl mx-auto px-6">
@@ -39,10 +43,11 @@ export function Navbar() {
             {/* Logo */}
             <a href="/" className="flex items-center gap-2.5 group">
               {/* Circular coin logo — place your image at /images/logo.png */}
+              <Link href="/" className="flex items-center gap-2.5 group">
               <div
                 className="w-8 h-8 rounded-full shrink-0 overflow-hidden
-                           border border-[rgba(200,168,75,0.25)]
-                           bg-devcraft-surface"
+                          bg-devcraft-surface
+                          border border-devcraft-violet/25 bg-devcraft-surface"
                 style={{
                   backgroundImage: "url('/logo.png')",
                   backgroundSize: "cover",
@@ -52,34 +57,47 @@ export function Navbar() {
                 aria-label="Zyntric Systems logo"
               />
               <div className="flex flex-col leading-none gap-[2px]">
-                <span className="font-mono text-[13px] font-medium tracking-[0.1em] uppercase text-white">
-                  Zyntric
-                </span>
-                <span className="font-mono text-[8px] tracking-[0.18em] uppercase text-[#c8a84b]">
-                  Systems
-                </span>
+                <span className="font-mono text-[13px] font-medium tracking-[0.1em] uppercase text-devcraft-foreground">
+                   Zyntric
+                 </span>
+                <span className="font-mono text-[8px] tracking-[0.18em] uppercase text-devcraft-violet-glow">
+                   Systems
+                 </span>
               </div>
             </a>
+            </Link>
 
             {/* Desktop Nav */}
             <nav className="hidden md:flex items-center gap-1">
               {navLinks.map((link) => (
                 <a
-                  key={link.label}
+                  key={link.href}
                   href={link.href}
                   className="px-4 py-2 font-mono text-[11px] uppercase tracking-[0.08em]
-                             text-devcraft-slate-light hover:text-white
+                             text-devcraft-slate-light hover:text-devcraft-foreground
                              hover:bg-devcraft-surface/60 rounded-lg
                              transition-all duration-200"
                 >
                   {link.label}
                 </a>
+              </Link>
               ))}
             </nav>
 
             {/* Desktop actions */}
             <div className="flex items-center gap-3">
               {/* Cart */}
+               <div className="flex items-center gap-2">
+              <Link
+                href="/templates"
+                aria-label="Search templates"
+                className="hidden sm:flex w-9 h-9 rounded-[4px] border border-devcraft-border
+                           bg-devcraft-surface/50 items-center justify-center
+                           text-devcraft-slate-light hover:text-devcraft-foreground hover:border-devcraft-border-hover
+                           transition-all duration-200"
+              >
+                <Search className="w-3.5 h-3.5" />
+              </Link>
               <button
                 className="hidden sm:flex items-center gap-2 px-3 py-2 rounded-[4px]
                            bg-devcraft-surface border border-devcraft-border
@@ -87,9 +105,23 @@ export function Navbar() {
                            text-devcraft-slate-light hover:text-white
                            hover:border-devcraft-border-hover transition-all duration-200"
               >
+                onClick={toggleCart}
+                aria-label="Open cart"
+                className="flex w-9 h-9 rounded-[4px] border border-devcraft-border
+                          bg-devcraft-surface/50 items-center justify-center relative
+                           text-devcraft-slate-light hover:text-devcraft-foreground hover:border-devcraft-border-hover
+                           transition-all duration-200"
+               >
                 <ShoppingCart className="w-3.5 h-3.5" />
                 <span className="hidden lg:inline">Cart</span>
-              </button>
+                 {itemCount > 0 && (
+                  <span className="absolute -top-1.5 -right-1.5 w-4 h-4 rounded-full bg-devcraft-violet
+                                   text-devcraft-bg text-[9px] font-bold flex items-center justify-center">
+                    {itemCount}
+                  </span>
+                )}
+               </button>
+              
 
               {/* CTA */}
               <a
@@ -108,7 +140,7 @@ export function Navbar() {
                 onClick={() => setMobileOpen(!mobileOpen)}
                 className="md:hidden w-9 h-9 rounded-[4px] bg-devcraft-surface
                            border border-devcraft-border flex items-center justify-center
-                           text-devcraft-slate-light hover:text-white
+                           text-devcraft-slate-light hover:text-devcraft-foreground
                            hover:border-devcraft-border-hover transition-all duration-200"
                 aria-label={mobileOpen ? "Close menu" : "Open menu"}
               >
@@ -121,6 +153,7 @@ export function Navbar() {
                       exit={{ rotate: 90, opacity: 0 }}
                       transition={{ duration: 0.15 }}
                     >
+                      <motion.div key="close" initial={{ rotate: -90, opacity: 0 }} animate={{ rotate: 0, opacity: 1 }} exit={{ rotate: 90, opacity: 0 }} transition={{ duration: 0.15 }}>
                       <X className="w-4 h-4" />
                     </motion.div>
                   ) : (
@@ -131,6 +164,7 @@ export function Navbar() {
                       exit={{ rotate: -90, opacity: 0 }}
                       transition={{ duration: 0.15 }}
                     >
+                      <motion.div key="menu" initial={{ rotate: 90, opacity: 0 }} animate={{ rotate: 0, opacity: 1 }} exit={{ rotate: -90, opacity: 0 }} transition={{ duration: 0.15 }}>
                       <Menu className="w-4 h-4" />
                     </motion.div>
                   )}
@@ -150,7 +184,7 @@ export function Navbar() {
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -8 }}
             transition={{ duration: 0.18, ease: "easeOut" }}
-            className="fixed top-16 left-0 right-0 z-40 md:hidden
+            className="fixed top-16 left-0 right-0 z-40 md:hidden glass
                        bg-devcraft-bg/95 backdrop-blur-xl
                        border-b border-devcraft-border"
           >
@@ -158,16 +192,19 @@ export function Navbar() {
               {navLinks.map((link) => (
                 <a
                   key={link.label}
-                  href={link.href}
+                   <Link
+                  key={link.href}
+                    href={link.href}
                   onClick={() => setMobileOpen(false)}
                   className="block px-4 py-3 rounded-[4px]
                              font-mono text-[11px] uppercase tracking-[0.08em]
-                             text-devcraft-slate-light hover:text-white
+                             text-devcraft-slate-light hover:text-devcraft-foreground
                              hover:bg-devcraft-surface border border-transparent
                              hover:border-devcraft-border transition-all duration-200"
                 >
                   {link.label}
                 </a>
+             </Link>
               ))}
 
               <div className="pt-3 mt-2 border-t border-devcraft-border">
@@ -187,6 +224,29 @@ export function Navbar() {
                   M-Pesa &amp; Card · Extended License
                 </p>
               </div>
+               <button
+                onClick={() => { setMobileOpen(false); toggleCart() }}
+                className="flex items-center justify-between w-full px-4 py-3 rounded-[4px]
+                           font-mono text-[11px] uppercase tracking-[0.08em]
+                           text-devcraft-slate-light hover:text-devcraft-foreground
+                           hover:bg-devcraft-surface border border-transparent
+                           hover:border-devcraft-border transition-all duration-200"
+              >
+                <span className="flex items-center gap-2">
+                  <ShoppingCart className="w-3.5 h-3.5" />
+                  Cart
+                </span>
+                {itemCount > 0 && (
+                  <span className="px-1.5 py-0.5 rounded-full bg-devcraft-violet text-devcraft-bg text-[9px] font-bold">
+                    {itemCount}
+                  </span>
+                )}
+              </button>
+
+              <p className="text-center font-mono text-[9px] uppercase tracking-[0.1em]
+                            text-devcraft-slate-dark pt-3 mt-2 border-t border-devcraft-border">
+                M-Pesa &amp; Card · Extended License
+              </p>
             </div>
           </motion.div>
         )}
