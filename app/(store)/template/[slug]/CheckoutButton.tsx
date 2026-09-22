@@ -33,8 +33,8 @@ const isFree = Number(template.priceUsd) === 0 && Number(template.priceKes) === 
     <>
       <button
         onClick={() => setIsOpen(true)}
-        className="block w-full rounded-lg bg-indigo-600 py-3 text-center text-sm font-medium text-white transition hover:bg-indigo-500"
-      >
+        className="block w-full rounded-lg bg-devcraft-violet py-3 text-center text-sm font-medium text-devcraft-bg transition hover:bg-devcraft-violet-glow"
+       >
         {isFree ? "Download Free" : "Get License"}
       </button>
       {isOpen && (
