@@ -34,7 +34,7 @@ export function RecoverDownload({
           </Section>
 
           <Section style={content}>
-            <Heading style={h1}>New download link 🔑</Heading>
+            <Heading style={h1}>New download link </Heading>
             <Text style={text}>
               You requested a new download link for <strong>{templateTitle}</strong>.
               Your previous link expired or was already used.
@@ -48,7 +48,7 @@ export function RecoverDownload({
 
             <Section style={warningBox}>
               <Text style={warningText}>
-                ⏰ <strong>Expires {expiryString}.</strong>{" "}
+                 <strong>Expires {expiryString}.</strong>{" "}
                 This link is single-use — it deactivates after your first download.
               </Text>
             </Section>
@@ -118,7 +118,7 @@ const text = {
 };
 const buttonContainer = { textAlign: "center" as const, margin: "0 0 28px" };
 const button = {
-  backgroundColor: "#10b981",
+  backgroundColor: "#c29a5b",
   color: "#ffffff",
   borderRadius: "8px",
   fontSize: "15px",
@@ -141,7 +141,7 @@ const warningText = {
   lineHeight: "1.5",
   margin: "0",
 };
-const link = { color: "#10b981" };
+const link = { color: "#c29a5b" };
 const hr = { borderColor: "#222222", margin: "24px 0 20px" };
 const footer = {
   color: "#475569",
