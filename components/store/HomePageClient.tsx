@@ -162,18 +162,18 @@ export function HomePageClient({ templates, isKenyan }: HomePageClientProps) {
             viewport={{ once: true }}
             className="relative overflow-hidden rounded-[4px] bg-devcraft-surface border border-devcraft-border"
           >
-            {/* Violet → emerald accent bar */}
+            {/* Gold → olive accent bar */}
             <div
               className="h-[2px] w-full"
               style={{
-                background: "linear-gradient(90deg, #8b5cf6, #10b981)",
+                 background: "linear-gradient(90deg, #c29a5b, #62634d)",
               }}
             />
 
             <div className="p-10 md:p-14">
               {/* Badge */}
               <div className="inline-flex items-center gap-2 bg-devcraft-violet/[0.12] border border-devcraft-violet/30 text-devcraft-violet-glow font-mono text-[9px] uppercase tracking-[0.12em] px-3 py-[5px] rounded-[3px] mb-8">
-                <span className="w-[4px] h-[4px] rounded-full bg-devcraft-emerald shadow-[0_0_5px_rgba(16,185,129,0.6)]" />
+                <span className="w-[4px] h-[4px] rounded-full bg-devcraft-emerald shadow-[0_0_5px_rgba(98,99,77,0.5)]" />
                 Production-Ready
               </div>
 
