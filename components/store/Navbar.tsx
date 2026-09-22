@@ -85,16 +85,16 @@ export function Navbar() {
 
             {/* Desktop actions */}
             <div className="flex items-center gap-2">
-+              <Link
-+                href="/templates"
-+                aria-label="Search templates"
-+                className="hidden sm:flex w-9 h-9 rounded-[4px] border border-devcraft-border
-+                           bg-devcraft-surface/50 items-center justify-center
-+                           text-devcraft-slate-light hover:text-devcraft-foreground hover:border-devcraft-border-hover
-+                           transition-all duration-200"
-+              >
-+                <Search className="w-3.5 h-3.5" />
-+              </Link>
+              <Link
+                href="/templates"
+                aria-label="Search templates"
+                className="hidden sm:flex w-9 h-9 rounded-[4px] border border-devcraft-border
+                           bg-devcraft-surface/50 items-center justify-center
+                           text-devcraft-slate-light hover:text-devcraft-foreground hover:border-devcraft-border-hover
+                           transition-all duration-200"
+              >
+                <Search className="w-3.5 h-3.5" />
+              </Link>
               {/* Cart */}
               <button
                 onClick={toggleCart}
@@ -164,7 +164,7 @@ export function Navbar() {
                       exit={{ rotate: -90, opacity: 0 }}
                       transition={{ duration: 0.15 }}
                     >
-                      <motion.div key="menu" initial={{ rotate: 90, opacity: 0 }} animate={{ rotate: 0, opacity: 1 }} exit={{ rotate: -90, opacity: 0 }} transition={{ duration: 0.15 }}>
+                     <motion.div key="menu" initial={{ rotate: 90, opacity: 0 }} animate={{ rotate: 0, opacity: 1 }} exit={{ rotate: -90, opacity: 0 }} transition={{ duration: 0.15 }}>
                       <Menu className="w-4 h-4" />
                     </motion.div>
                   )}
@@ -209,7 +209,8 @@ export function Navbar() {
                      <span className="font-mono text-[7px] tracking-[0.18em] uppercase text-devcraft-violet-glow">Systems</span>
                   </div>
                 </Link>
-                <button onClick={() => setIsOpen(false)} className="w-7 h-7 rounded-[4px] flex items-center justify-center text-devcraft-slate-light hover:text-devcraft-foreground hover:bg-devcraft-surface transition-all">
+                <button onClick={() => setIsOpen(false)} 
+                  className="w-7 h-7 rounded-[4px] flex items-center justify-center text-devcraft-slate-light hover:text-devcraft-foreground hover:bg-devcraft-surface transition-all">
                   <X className="w-4 h-4" />
                 </button>
               </div>
