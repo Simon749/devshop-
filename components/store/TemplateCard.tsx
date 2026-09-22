@@ -1,7 +1,7 @@
 "use client"
 
 import { motion } from "framer-motion"
-import { ExternalLink, Download, Sparkles, ShoppingCart } from "lucide-react"
+import { ExternalLink, ShoppingCart, Check } from "lucide-react"
 import Link from "next/link"
 import { Template } from "@/types"
 import { formatPriceCompact } from "@/lib/utils"
@@ -25,6 +25,11 @@ const categoryColors: Record<string, string> = {
 export function TemplateCard({ template, index }: TemplateCardProps) {
   const { isKenyan } = useCurrency()
   const { addItem, items } = useCart()
+  const handlePreview = (e: React.MouseEvent) => {
+    e.preventDefault()
+    e.stopPropagation()
+    if (template.livePreviewUrl) window.open(template.livePreviewUrl, "_blank")
+  }
 
   const isInCart = items.some((i) => i.id === template.id)
 
@@ -49,12 +54,12 @@ export function TemplateCard({ template, index }: TemplateCardProps) {
 
   return (
     <motion.div
-      initial={{ opacity: 0, y: 20 }}
+      initial={{ opacity: 0, y: 12 }}
       animate={{ opacity: 1, y: 0 }}
-      exit={{ opacity: 0, y: -20 }}
-      transition={{ duration: 0.4, delay: index * 0.08 }}
-      layout
-      className="group relative h-full flex"
+      exit={{ opacity: 0 }}
+      transition={{ duration: 0.3, delay: index * 0.04 }}
+       layout
+      className="group relative h-full"
     >
       <div className="relative bg-devcraft-card border border-devcraft-border rounded-xl overflow-hidden
                       flex flex-col h-full w-full
@@ -64,27 +69,64 @@ export function TemplateCard({ template, index }: TemplateCardProps) {
 
         {/* Screenshot Container */}
         <div className="relative aspect-[4/3] overflow-hidden shrink-0">
+          <Link
+        href={`/template/${template.slug}`}
+        className="block bg-devcraft-card border border-devcraft-border rounded-xl overflow-hidden
+                   transition-all duration-300 ease-out
+                   hover:border-devcraft-border-hover hover:-translate-y-1 hover:shadow-card-hover"
+      >
+        {/* Screenshot — dominates the card, does the selling */}
+        <div className="relative aspect-[4/3] overflow-hidden bg-devcraft-surface">
           <img
             src={imageSource}
             alt={template.title}
-            className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
+            className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-[1.03]"
             onError={(e) => {
               (e.target as HTMLImageElement).src = "/placeholder.png"
             }}
           />
           <div className="absolute inset-0 bg-gradient-to-t from-devcraft-card via-transparent to-transparent opacity-60" />
-
+          </div>
           {template.isFree && (
             <div className="absolute top-3 left-3">
               <span className="inline-flex items-center gap-1 badge-emerald px-3 py-1.5 text-xs font-semibold">
                 <Sparkles className="w-3 h-3" />
                 FREE
+
+           {/* Quiet metadata — no color-coded badges, no description, no tag wall */}
+        <div className="p-4">
+          <div className="flex items-start justify-between gap-3 mb-1">
+            <h3 className="text-[15px] font-medium text-devcraft-foreground leading-snug">
+              {template.title}
+            </h3>
+            {template.isFree ? (
+              <span className="font-mono text-xs text-devcraft-emerald-glow shrink-0 mt-0.5">FREE</span>
+            ) : (
+              <span className="font-mono text-xs text-devcraft-violet-glow shrink-0 mt-0.5">
+                {formatPriceCompact(template.priceUsd, template.priceKes, isKenyan)}
               </span>
             </div>
           )}
+          </div>
+
+          <p className="font-mono text-[11px] text-devcraft-slate tracking-wide">
+            {template.techStack.slice(0, 3).join(" · ")}
+          </p>
 
           {/* Quick add to cart overlay on hover */}
           <div className="absolute top-3 right-3 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+            
+                  {/* Quiet action row — icon-only, no glass, no labeled buttons */}
+          <div className="flex items-center gap-1 mt-3 -ml-1.5">
+            <button
+              onClick={handlePreview}
+              disabled={!template.livePreviewUrl}
+              title="Live preview"
+              className="p-1.5 rounded-md text-devcraft-slate hover:text-devcraft-foreground
+                         transition-colors duration-150 disabled:opacity-30 disabled:cursor-not-allowed"
+            >
+              <ExternalLink className="w-3.5 h-3.5" />
+            </button>
             <button
               onClick={handleAddToCart}
               className={`w-9 h-9 rounded-lg flex items-center justify-center transition-all duration-200
@@ -93,8 +135,14 @@ export function TemplateCard({ template, index }: TemplateCardProps) {
                            : "bg-black/50 backdrop-blur-sm text-white hover:bg-devcraft-violet"
                          }`}
               title={isInCart ? "In cart" : "Add to cart"}
-            >
+              className={`p-1.5 rounded-md transition-colors duration-150 ${
+                isInCart
+                  ? "text-devcraft-emerald-glow"
+                  : "text-devcraft-slate hover:text-devcraft-foreground"
+              }`}
+             >
               <ShoppingCart className="w-4 h-4" />
+              {isInCart ? <Check className="w-3.5 h-3.5" /> : <ShoppingCart className="w-3.5 h-3.5" />}
             </button>
           </div>
         </div>
