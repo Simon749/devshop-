@@ -19,9 +19,12 @@ async function getExchangeRate(req: NextRequest): Promise<number> {
   const ip = headersList.get("x-forwarded-for") ?? "unknown";
   
   const { success } = await checkRateLimit(ip);
-  if (!success) {
-    return new Response("Too Many Requests", { status: 429 });
-  }
+
+if (!success) {
+  const error = new Error("Too many requests. Please try again shortly.");
+  ;(error as any).status = 429;
+  throw error;
+}
 
   // Method 1: Call our own API (has caching logic)
   try {

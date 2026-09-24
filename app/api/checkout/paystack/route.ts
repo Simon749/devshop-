@@ -18,9 +18,13 @@ async function getExchangeRate(): Promise<number> {
 export async function POST(req: NextRequest) {
   try {
     const ip = req.headers.get("x-forwarded-for")?.split(",")[0].trim() ?? "unknown"
-    const limited = await checkRateLimit(`paystack-checkout:${ip}`, 5, 60)
-    if (!limited.allowed) {
-      return NextResponse.json({ message: "Too many attempts. Please wait a minute." }, { status: 429 })
+    const { success } = await checkRateLimit(ip)
+
+    if (!success) {
+      return NextResponse.json(
+        { message: "Too many attempts. Please wait a minute." },
+        { status: 429 }
+      )
     }
 
     const { email, templateId, checkoutSessionId, templateSlug } = await req.json()
