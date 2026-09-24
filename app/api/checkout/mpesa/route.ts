@@ -18,10 +18,13 @@ async function getExchangeRate(req: NextRequest): Promise<number> {
   const headersList = await headers();
   const ip = headersList.get("x-forwarded-for") ?? "unknown";
   
-  const { success } = await checkRateLimit(ip);
-  if (!success) {
-    return new Response("Too Many Requests", { status: 429 });
-  }
+const { success } = await checkRateLimit(ip);
+
+if (!success) {
+  const error = new Error("Too many requests. Please try again shortly.");
+  ;(error as any).status = 429;
+  throw error;
+}
 
   // Method 1: Call our own API (has caching logic)
   try {
@@ -176,8 +179,8 @@ export async function POST(req: NextRequest) {
   } catch (err: any) {
     console.error("[MPESA CHECKOUT ERROR]", err)
     return NextResponse.json(
-      { message: err.message || "Failed to initiate payment" },
-      { status: 500 }
-    )
+  { message: err.message || "Failed to initiate payment" },
+  { status: err.status || 500 }
+)
   }
 }
