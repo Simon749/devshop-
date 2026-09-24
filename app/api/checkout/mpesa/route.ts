@@ -178,6 +178,7 @@ export async function POST(req: NextRequest) {
     })
   } catch (err: any) {
     console.error("[MPESA CHECKOUT ERROR]", err)
+    const status = typeof err?.status === "number" ? err.status : 500;
     return NextResponse.json(
   { message: err.message || "Failed to initiate payment" },
   { status: err.status || 500 }
