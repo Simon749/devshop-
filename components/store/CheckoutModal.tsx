@@ -350,7 +350,7 @@ export function CheckoutModal({ template, onClose }: CheckoutModalProps) {
                   )}
                 </AnimatePresence>
 
-                <button onClick={template.isFree ? handleFreeDownload : handleSubmit} disabled={!legalChecked || isLoading || rateLoading} className={`w-full flex items-center justify-center gap-2 px-6 py-4 rounded-xl font-semibold text-lg transition-all duration-200 active:scale-[0.98] ${template.isFree ? "bg-devcraft-emerald text-white hover:bg-emerald-600 hover:shadow-emerald-glow" : "bg-devcraft-violet text-white hover:bg-violet-600 hover:shadow-violet-glow"} ${!legalChecked || isLoading || rateLoading ? "opacity-50 cursor-not-allowed" : ""}`}>
+                <button onClick={template.isFree ? handleFreeDownload : handleSubmit} disabled={!legalChecked || isLoading || rateLoading} className={`w-full flex items-center justify-center gap-2 px-6 py-4 rounded-xl font-semibold text-lg transition-all duration-200 active:scale-[0.98] ${template.isFree ? "bg-devcraft-emerald text-devcraft-foreground hover:brightness-110" : "bg-devcraft-violet text-devcraft-bg hover:bg-devcraft-violet-glow"} ${!legalChecked || isLoading || rateLoading ? "opacity-50 cursor-not-allowed" : ""}`}>
                   {isLoading ? <><Loader2 className="w-5 h-5 animate-spin" /> Processing...</> : 
                    rateLoading ? <><Loader2 className="w-5 h-5 animate-spin" /> Getting rate...</> :
                    template.isFree ? <><Download className="w-5 h-5" /> Get Free Download</> : 

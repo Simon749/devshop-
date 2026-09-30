@@ -9,7 +9,6 @@ import { useCart } from "@/lib/cart-store"
 const navLinks = [
   { label: "Templates", href: "/templates" },
   { label: "License",   href: "/license" },
-  { label: "Docs",      href: "/docs" },
 ]
 
 export function Navbar() {
